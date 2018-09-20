@@ -68,7 +68,7 @@ def sendrequest(url, method="get", get=None, data=None):
     args = {k: v for k, v in {'params': get, 'json': data}.items() if v}
     # execute either requests.get or requests.post based on the <method> arg
     r = getattr(requests, method)(url=full_url, **args)
-    if interactive or True:
+    if interactive:
         print(method)
         print(full_url)
         print(args)

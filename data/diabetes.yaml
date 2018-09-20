@@ -1,0 +1,3 @@
+CDSMCodeMappingNeeds_Diabetes.xlsx:
+  sheets: ["Conditions", "Observations", "Medications"]
+  columns: ['b', 'e', 'h', 'k']

@@ -12,6 +12,3 @@ file.xlsx:
   ## NB as of today, these columns *must* be the same for all sheets in the xlsx
   columns: ['f', 'i', 'l', 'o']
 
-CDSMCodeMappingNeeds_Diabetes.xlsx:
-  sheets: ["Conditions", "Observations", "Medications"]
-  columns: ['b', 'e', 'h', 'k']
