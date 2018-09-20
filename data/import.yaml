@@ -1,0 +1,17 @@
+## this is a configuration file for the import script of the c3-cloud semantic mapper
+## it should be located in the same directory as the xlsx files it refers to.
+## it is written in YAML http://yaml.org/
+
+## specify the name(s) of the files to import in the database
+file.xlsx:
+  ## for each file, you need to specify the names of the sheets to import
+  sheets: ["Conditions", "Observations", "Medications", "Immunizations"]
+  ## and the first column for each site: those are the columns in the excel file
+  ## indicating the leftmost column for every site (the column containing the code system data)
+  ## please refer to the documentation for more details
+  ## NB as of today, these columns *must* be the same for all sheets in the xlsx
+  columns: ['f', 'i', 'l', 'o']
+
+CDSMCodeMappingNeeds_Diabetes.xlsx:
+  sheets: ["Conditions", "Observations", "Medications"]
+  columns: ['b', 'e', 'h', 'k']
