@@ -8,6 +8,7 @@ import requests
 import unicodedata
 from collections import Counter
 import time
+import pandas as pd
 
 # assumptions about the xlsx structure:
 # [Concepts][        site name 1       ][        site name 2       ]...
@@ -38,6 +39,14 @@ def printcolor(s, color, end='\n'):
     print(s, end='')
     print(bcolors.ENDC, end=end)
 
+def printinfo(s):
+    printcolor(s, color=bcolors.OKBLUE)
+def printok(s):
+    printcolor(s, color=bcolors.OKGREEN)
+def printwarn(s):
+    printcolor(s, color=bcolors.WARNING)
+def printerr(s):
+    printcolor(s, color=bcolors.FAIL)
 
 # constants
 SITE = 'site'
@@ -86,14 +95,13 @@ def upload_mapping(o):
     printcolor('[uploading <{}>@<{}>]'.format(o[CONCEPT], o[SITE]),
                color=bcolors.OKBLUE, end='')
     if len(o['codes']) > 0:
+        codesystem = o['codes'][0][CODE_SYSTEM]
         try:
             # lookup the code system uri from the server
-            uri = [cs[CODE_SYSTEM_URI] for cs in codesystems if cs[CODE_SYSTEM] == o['codes'][0][CODE_SYSTEM]][0]
+            uri = [cs[CODE_SYSTEM_URI] for cs in codesystems if cs[CODE_SYSTEM] == codesystem][0]
         except IndexError:
-            # if it doesn't exist, we generate a fake one
-            # NB a better solution would be to provide a real one instead
-            # not easy because of the difficulty to find oids
-            uri = "uri:oid:{}_oid".format(o['codes'][0][CODE_SYSTEM])
+            printcolor('no such URI for {}'.format(codesystem), color=bcolors.FAIL)
+            return None
 
         # add the uri to the POST data to send
         def f(c):
@@ -318,6 +326,21 @@ def importFile(f, config):
     process_items(d)
 
 
+# ### terminologies uris ### #
+def upload_terminologies(f):
+    printok('updating terminologies from: {}'.format(f))
+    terminos = pd.read_csv(f)
+    print(terminos)
+    def upload(x):
+        printinfo('uploading terminology: {}'.format(x))
+        resp = sendrequest('code-systems', method='post', data = x)
+        print(resp)
+    for x in terminos.iterrows():
+        x = x[1]
+        o = {CODE_SYSTEM: x[CODE_SYSTEM],
+             CODE_SYSTEM_URI: x[CODE_SYSTEM_URI]}
+        upload(o)
+
 # ### Main ### #
 
 
@@ -326,9 +349,6 @@ if __name__ == "__main__":
     global interactive
     interactive = '--interactive' in args
     
-    jsondata = json.loads(sendrequest(url="all"))['data']
-    mappings = jsondata['mappings']
-    codesystems = jsondata['code_systems']
 
     report = Counter(
         identical=0,
@@ -350,6 +370,14 @@ if __name__ == "__main__":
         dirname = os.path.dirname(configpath)
         with open(configpath) as f:
             y = yaml.load(f)
+
+            if 'terminologies' in y:
+                upload_terminologies(y['terminologies']
+
+            jsondata = json.loads(sendrequest(url="all"))['data']
+            mappings = jsondata['mappings']
+            codesystems = jsondata['code_systems']
+
             [importFile(os.path.join(dirname, k), e)
              for k, e in y.items()]
 

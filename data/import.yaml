@@ -12,3 +12,15 @@ file.xlsx:
   ## NB as of today, these columns *must* be the same for all sheets in the xlsx
   columns: ['f', 'i', 'l', 'o']
 
+CDSMCodeMappingNeeds_Diabetes.xlsx:
+  sheets: ["Conditions", "Observations", "Medications", "Immunizations"]
+  ## and the first column for each site: those are the columns in the excel file
+  ## indicating the leftmost column for every site (the column containing the code system data)
+  ## please refer to the documentation for more details
+  ## NB as of today, these columns *must* be the same for all sheets in the xlsx
+  columns: ['f', 'i', 'l', 'o']
+  
+  
+#SemMapper-CDSMCodeMappings-DM_RF_HF_Dp-v09_02Oct2018_INSERM.xlsx:
+  
+#  columns: ['f', 'i', 'l', 'o']
