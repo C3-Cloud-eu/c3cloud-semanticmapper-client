@@ -1,14 +1,15 @@
-SemMapper-CDSMCodeMappings-DM_RF_HF_Dp-v1.0_23Oct2018_INSERM_Loc.xlsx:
-  sheets:
-    - Conditions
-    - Observations
-    - Medications
-    - Immunizations
-    - Procedures
-    - Family History
-  columns:
-    - f
-    - i
-    - l
-    - o
-  terminologies: terminologies.csv
+mappings:
+  SemMapper-CDSMCodeMappings-DM_RF_HF_Dp-v1.0_23Oct2018_INSERM_Loc.xlsx:
+    sheets:
+      - Conditions
+      - Observations
+      - Medications
+      - Immunizations
+      - Procedures
+      - Family History
+    columns:
+      - f
+      - i
+      - l
+      - o
+terminologies: terminologies.csv

@@ -64,6 +64,11 @@ EQUIVALENCE_DEFINITION = 'equivalence_definition'
 
 # normalize and trim a string
 def clean(s):
+    if s is None:
+        return None
+    s = str(s)
+    if 'TBC by' in s:
+        s = ''
     return(unicodedata.normalize('NFKC', str(s)).strip())
 
 
@@ -84,7 +89,7 @@ def sendrequest(url, method="get", get=None, data=None):
         print(r)
         print(r.status_code)
     if r.status_code != 200:
-        report['errors'] += 1
+        report['error'] += 1
         print("error", r.status_code, r.text)
     return(r.text)
 
@@ -94,6 +99,8 @@ def sendrequest(url, method="get", get=None, data=None):
 def upload_mapping(o):
     printcolor('[uploading <{}>@<{}>]'.format(o[CONCEPT], o[SITE]),
                color=bcolors.OKBLUE, end='')
+    print(o)
+    printwarn('----')
     if len(o['codes']) > 0:
         codesystem = o['codes'][0][CODE_SYSTEM]
         try:
@@ -101,6 +108,7 @@ def upload_mapping(o):
             uri = [cs[CODE_SYSTEM_URI] for cs in codesystems if cs[CODE_SYSTEM] == codesystem][0]
         except IndexError:
             printcolor('no such URI for {}'.format(codesystem), color=bcolors.FAIL)
+            report['error'] += 1
             return None
 
         # add the uri to the POST data to send
@@ -109,7 +117,8 @@ def upload_mapping(o):
             return(c)
         o['codes'] = [f(c) for c in o['codes']]
     if not dryrun:
-        sendrequest("mappings", method="post", data=o)
+        ans = sendrequest("mappings", method="post", data=o)
+        print(ans)
 
 
 # ### model ### #
@@ -229,9 +238,10 @@ def resolveCell(wb, sheet, coord):
             sht = sheet
             coord = v
         coord = coord[1:]
-        return(sht[coord].value)
+        return(clean(sht[coord].value))
     else:
-        return(v)
+        # return('' if v is None else v)
+        return(clean(v))
 
 
 def build_item(wb, sheet, startcoord):
@@ -247,9 +257,9 @@ def build_item(wb, sheet, startcoord):
             c = startcoord.right(i).top().down()
             # print(c)
             cv = cell(c)
-            # print(cv)
             if clean(cv) == clean(col):
                 # print('col found: ',c,cv)
+                # printinfo(cell(startcoord.right(i)))
                 return cell(startcoord.right(i))
             # else:
             #     print("no")
@@ -267,11 +277,16 @@ def build_item(wb, sheet, startcoord):
         CODE:        findcol("Code"),
         DESIGNATION: findcol("Designation"),
         CONCEPT:     cell(startcoord.concept())}
+
+    # allow empty designation
+    if item[DESIGNATION] is None:
+        item[DESIGNATION] = ''
+    # print(item)
     # print(cell(startcoord.top()), cell(startcoord.concept()))
 
     # return({k: str(resolveCell(wb, sheet, str(v)))
     #         for k, v in coords.items()})
-
+    assert(item[DESIGNATION] is not None)
     if any([v is None for k, v in item.items() if
             k == CODE
             or k == CODE_SYSTEM
@@ -287,17 +302,30 @@ def build_item(wb, sheet, startcoord):
     return item
 
 def item_is_valid(i):
+    # printinfo('checking {}'.format(i))
+    def is_illegal(s):
+        s = str(s)
+        # print(i, s)
+        illegal = s is None or s in ['NO CODING', 'NO CODE', 'NO DESIGNATION'] or 'TBC by' in s
+        if illegal:
+            printerr('{} is illegal'.format(i))
+            # report['error'] += 1 # cound as an error?
+        return illegal
+    
     return (not (i is None
                  or i[CONCEPT] == "None"
                  or i[CODE] == "None"
+                 or len(i[CODE]) == 0
                  or i[CONCEPT] is None
-                 or i[CODE] is None))
+                 or i[CODE] is None
+                 or any([is_illegal(e) for e in [i[CONCEPT], i[CODE], i[CODE_SYSTEM]]])))
     # print(i,"~~~~>",valid)
     # return valid
 
 
 # if the key is already present, append the item to d[key],
 # otherwise create d[key]
+# this step does not group by site, so repetitions are ok
 def insert_item(d, item):
     try:
         d[item[CONCEPT]].append(item)
@@ -307,7 +335,7 @@ def insert_item(d, item):
 
 def group_by(l, key):
     keys = set([x[key] for x in l])
-    return({x: [y for y in l if y[key] == x] for x in keys})
+    return({x: [y for y in l if y[key] == x and len(y[CODE])] for x in keys})
 
 
 def importFile(f, config):
@@ -321,8 +349,11 @@ def importFile(f, config):
                 # print(c, r)
                 coord = Coord(c, r)
                 i = build_item(wb, sheet, startcoord=coord)
+                # print('item:', i)
                 if item_is_valid(i):
+                    assert i[CODE_SYSTEM] in [e[CODE_SYSTEM] for e in codesystems], 'error: <{}> not in {}'.format(i[CODE_SYSTEM], [e[CODE_SYSTEM] for e in codesystems])
                     insert_item(d, i)
+    # several codes for each site
     d = {k: group_by(v, SITE) for k, v in d.items()}
     process_items(d)
 
@@ -348,7 +379,17 @@ def upload_terminologies(f):
 if __name__ == "__main__":
     args = sys.argv
     global interactive
+    global codesystems
     global dryrun
+    global report
+    
+    report = Counter(
+        identical=0,
+        different=0,
+        new=0,
+        error=0
+    )
+
     interactive = '--interactive' in args
     dryrun = '--dry-run' in args
     FORCE = '--force' in args
@@ -358,35 +399,34 @@ if __name__ == "__main__":
         args.remove('--dry-run')
     if interactive:
         args.remove('--interactive')
-    
+    if '--NUKE' in args:
+        args.remove('--NUKE')
+        ans = sendrequest('all', method='delete')
+        printwarn('deleting everything: {}'.format(ans))
         
-    report = Counter(
-        identical=0,
-        different=0,
-        new=0,
-        error=0
-    )
-
+    
     # print(mappings)
-
 
     if len(args) < 2:
         raise(Exception("please provide the path to a yaml configuration file"))
     else:
         configpath = args[1]
         dirname = os.path.dirname(configpath)
+        def fullpath(e):
+            return os.path.join(dirname, e)
+        
         with open(configpath) as f:
             y = yaml.load(f)
-
-            if 'terminologies' in y:
-                upload_terminologies(y['terminologies'])
+            print(y, 'terminologies' in y.keys(), y.keys())
+            if 'terminologies' in y.keys():
+                upload_terminologies(fullpath(y['terminologies']))
 
             jsondata = json.loads(sendrequest(url="all"))['data']
             mappings = jsondata['mappings']
             codesystems = jsondata['code_systems']
 
-            [importFile(os.path.join(dirname, k), e)
-             for k, e in y.items()]
+            [importFile(fullpath(k), e)
+             for k, e in y['mappings'].items()]
 
     print('done.')
     print('──────────────────────────────')

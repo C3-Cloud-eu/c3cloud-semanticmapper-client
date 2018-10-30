@@ -1,5 +1,5 @@
 code_system,code_system_uri
-SNOMED-CT,http://snomed.info/sct
+SNOMED CT,http://snomed.info/sct
 ATC,http://www.whocc.no/atc
 LOINC,http://loinc.org
 ICD-10-SE,urn:oid:1.2.752.116.1.1.1.1.3
