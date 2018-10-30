@@ -108,7 +108,8 @@ def upload_mapping(o):
             c[CODE_SYSTEM_URI] = uri
             return(c)
         o['codes'] = [f(c) for c in o['codes']]
-    sendrequest("mappings", method="post", data=o)
+    if not dryrun:
+        sendrequest("mappings", method="post", data=o)
 
 
 # ### model ### #
@@ -347,9 +348,18 @@ def upload_terminologies(f):
 if __name__ == "__main__":
     args = sys.argv
     global interactive
+    global dryrun
     interactive = '--interactive' in args
+    dryrun = '--dry-run' in args
+    FORCE = '--force' in args
+    if FORCE:
+        args.remove('--force')
+    if dryrun:
+        args.remove('--dry-run')
+    if interactive:
+        args.remove('--interactive')
     
-
+        
     report = Counter(
         identical=0,
         different=0,
@@ -359,9 +369,6 @@ if __name__ == "__main__":
 
     # print(mappings)
 
-    FORCE = '--force' in args
-    if FORCE:
-        args.remove('--force')
 
     if len(args) < 2:
         raise(Exception("please provide the path to a yaml configuration file"))
@@ -372,7 +379,7 @@ if __name__ == "__main__":
             y = yaml.load(f)
 
             if 'terminologies' in y:
-                upload_terminologies(y['terminologies']
+                upload_terminologies(y['terminologies'])
 
             jsondata = json.loads(sendrequest(url="all"))['data']
             mappings = jsondata['mappings']
