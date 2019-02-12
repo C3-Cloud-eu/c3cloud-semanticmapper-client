@@ -20,9 +20,11 @@ import pandas as pd
 #
 # refer to the documentation for more details
 
-baseurl = 'http://localhost:5000/c3-cloud/'  # tests
-# baseurl = 'http://cispro.chu-rouen.fr/c3-cloud/'
 
+# baseurl = sys.argv[0]
+#baseurl = 'http://localhost:5000/c3-cloud/'  # tests
+# baseurl = 'http://cispro.chu-rouen.fr/c3-cloud/'
+# baseurl = "http://18.205.143.209/c3-cloud/"
 
 # colored terminal output
 class bcolors:
@@ -116,6 +118,8 @@ def upload_mapping(o):
             c[CODE_SYSTEM_URI] = uri
             return(c)
         o['codes'] = [f(c) for c in o['codes']]
+    print(o)
+    quit()
     if not dryrun:
         ans = sendrequest("mappings", method="post", data=o)
         print(ans)
@@ -252,6 +256,7 @@ def build_item(wb, sheet, startcoord):
         return resolveCell(wb, sheet, str(c))
     
     def findcol(col):
+        
         # print("--------findcol "+col)
         for i in range(0,3):
             c = startcoord.right(i).top().down()
@@ -272,7 +277,7 @@ def build_item(wb, sheet, startcoord):
     #     DESIGNATION: startcoord.right(2),
     #     CONCEPT:     startcoord.concept()}
     item = {
-        SITE: cell(startcoord.top()),
+        SITE:        cell(startcoord.top()),
         CODE_SYSTEM: findcol("Coding System"),
         CODE:        findcol("Code"),
         DESIGNATION: findcol("Designation"),
@@ -280,6 +285,7 @@ def build_item(wb, sheet, startcoord):
 
     # allow empty designation
     if item[DESIGNATION] is None:
+        printerr('{} {} is empty'.format(item[SITE], item[CODE]))
         item[DESIGNATION] = ''
     # print(item)
     # print(cell(startcoord.top()), cell(startcoord.concept()))
@@ -304,9 +310,11 @@ def build_item(wb, sheet, startcoord):
 def item_is_valid(i):
     # printinfo('checking {}'.format(i))
     def is_illegal(s):
-        s = str(s)
+        s = str(s).lower()
         # print(i, s)
-        illegal = s is None or s in ['NO CODING', 'NO CODE', 'NO DESIGNATION'] or 'TBC by' in s
+        illegal = (s is None
+                   or s in ['', 'no coding', 'no code', 'no designation', 'n/a']
+                   or any([e in s for e in ['tbc by', 'there is no']]))
         if illegal:
             printerr('{} is illegal'.format(i))
             # report['error'] += 1 # cound as an error?
@@ -315,6 +323,7 @@ def item_is_valid(i):
     return (not (i is None
                  or i[CONCEPT] == "None"
                  or i[CODE] == "None"
+                 or i[DESIGNATION] == "None"
                  or len(i[CODE]) == 0
                  or i[CONCEPT] is None
                  or i[CODE] is None
@@ -345,13 +354,14 @@ def importFile(f, config):
     for sheetName in config['sheets']:
         sheet = wb[sheetName]
         for c in [a.upper() for a in config['columns']]:
-            for r in range(3, sheet.max_row):
+            for r in range(3, sheet.max_row+1):
                 # print(c, r)
                 coord = Coord(c, r)
                 i = build_item(wb, sheet, startcoord=coord)
                 # print('item:', i)
                 if item_is_valid(i):
                     assert i[CODE_SYSTEM] in [e[CODE_SYSTEM] for e in codesystems], 'error: <{}> not in {}'.format(i[CODE_SYSTEM], [e[CODE_SYSTEM] for e in codesystems])
+                    i[CONCEPT] = sheetName + "|" + i[CONCEPT]
                     insert_item(d, i)
     # several codes for each site
     d = {k: group_by(v, SITE) for k, v in d.items()}
@@ -382,6 +392,7 @@ if __name__ == "__main__":
     global codesystems
     global dryrun
     global report
+    global baseurl
     
     report = Counter(
         identical=0,
@@ -393,6 +404,11 @@ if __name__ == "__main__":
     interactive = '--interactive' in args
     dryrun = '--dry-run' in args
     FORCE = '--force' in args
+    if '--url' in args:
+        baseurl = args[args.index('--url')+1]
+        args.remove('--url')
+        args.remove(baseurl)
+        printinfo('Using "{}" as base url'.format(baseurl))
     if FORCE:
         args.remove('--force')
     if dryrun:
@@ -403,7 +419,6 @@ if __name__ == "__main__":
         args.remove('--NUKE')
         ans = sendrequest('all', method='delete')
         printwarn('deleting everything: {}'.format(ans))
-        
     
     # print(mappings)
 
@@ -417,7 +432,7 @@ if __name__ == "__main__":
         
         with open(configpath) as f:
             y = yaml.load(f)
-            print(y, 'terminologies' in y.keys(), y.keys())
+            # print(y, 'terminologies' in y.keys(), y.keys())
             if 'terminologies' in y.keys():
                 upload_terminologies(fullpath(y['terminologies']))
 
@@ -432,3 +447,26 @@ if __name__ == "__main__":
     print('──────────────────────────────')
     for category, count in report.items():
         print('{}: {}'.format(category, count))
+
+
+# def tests_tmp():
+
+# # [str(resolveCell(df, df['Observation & Units'], Coord(l,1))) for l in 'ABCDEFGHIJKLMNOPQRSTUV']
+
+# f = '../data/data_2019_02_07/SemMapper-CDSMCodeMappings-with-cdsm-profile-v2-7Feb2019.xlsx'
+# df = load_workbook(f)
+
+# # for sh in config['sheets']:
+# for sh in ["C3DP_CDSM_PROFILE", "Observations", "Conditions", "Medications", "Family History", "Procedures", "Observations & Units"]:
+#     sheet = pd.DataFrame(df[sh].values)
+
+    
+
+#     def normalize_fused_cells(sheet, row):
+#         col = ''
+#         for ci in sheet.columns:
+#             if sheet.iloc[row,ci] is None:
+#                 sheet.iloc[row,ci] = col
+#             else:
+#                 col = sheet.iloc[row,ci]
+    
