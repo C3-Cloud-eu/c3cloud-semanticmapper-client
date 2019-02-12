@@ -145,25 +145,28 @@ def build_item(site, concept, df):
         print(codesystems)
         report['error'] += 1
         return None
+
+    codesystem = CodeSystem(code_system=codesystem, uri=uri)
     
-    def f(code, designation):
-        return {'code': code,
-                'designation': designation,
-                'code_system': codesystem,
-                'code_system_uri': uri}
-    # take the unique of the codes 
-    codes = [f(*t) for t in list(set(zip(df['Code'], df['Designation'])))]
-    
+    # def f(code, designation):
+    #     return {'code': code,
+    #             'designation': designation,
+    #             'code_system': codesystem,
+    #             'code_system_uri': uri}
+    # # take the unique of the codes 
+    # codes = [f(*t) for t in list(set(zip(df['Code'], df['Designation'])))]
+    codes = [Code(code=c, designation=d, code_system=codesystem) for c, d in list(set(zip(df['Code'], df['Designation'])))]
     # add the uri to the POST data to send
     # o['code_system_uri'] = uri
     
-
     
     o = Mapping(site = site,
                 codes = codes,
                 concept = concept)
-    
     # assert schema_mapping.is_valid(o)
+    # print(o.codes)
+    # quit()
+
     
     return o
 

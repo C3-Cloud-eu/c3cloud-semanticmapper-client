@@ -65,9 +65,10 @@ class Mapping(Dictable):
         assert type(site) == str
         assert all([type(e) in [dict, Code] for e in codes])
 
-        self.codes = [(identity if type(c) == dict else
+        self.codes = [(identity if type(c) == Code else
                       lambda x: Code(**x))(c) for c in codes]
-        
+        # print(self.codes)
+        # quit()
         self.concept = concept
         self.site = site
         self.codes = codes

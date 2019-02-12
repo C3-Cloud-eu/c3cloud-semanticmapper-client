@@ -91,11 +91,11 @@ def process_items(l):
         # same site, same concept
         codelist = [] if len(m)==0 else  m.loc[ np.array(m.site == e.site)
                          & np.array(m.concept == e.concept), :]
-        
+        print(e.codes)
         if len(codelist):
-            print(f"already in db→ <{e['concept']}>@<{e['site']}>:", end='')
-            if( set(codelist.code) == set([ee['code'] for ee in e['codes']])
-               and set(codelist.designation) == set([ee['designation'] for ee in e['codes']])):
+            print(f"already in db→ <{e.concept}>@<{e.site}>:", end='')
+            if( set(codelist.code) == set([ee.code for ee in e.codes])
+               and set(codelist.designation) == set([ee.designation for ee in e.codes])):
                 printcolor("[identical]", color=bcolors.OKGREEN, end='')
                 report['identical'] += 1
             else:
