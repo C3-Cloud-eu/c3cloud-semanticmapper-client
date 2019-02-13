@@ -6,14 +6,16 @@ import numpy as np
 import json
 import schema
 
+from objects import *
 from lib import *
 from helpers import schema_mapping
 
 
 def __init__():
-    global report, FORCE
+    global report, FORCE, dryrun, interactive
     FORCE = False
     dryrun = False
+    interactive = False
     report = Counter(
         identical=0,
         different=0,
@@ -53,13 +55,28 @@ def sendrequest(url, method="get", get=None, data=None):
 # send a mapping to upload
 # o: python dict containing the mapping data
 def upload_mapping(o):
-    printcolor('[uploading <{}>@<{}>]'.format(o['concept'], o['site']),
+    printcolor('[uploading <{}>@<{}>]'.format(o.concept, o.site),
                color=bcolors.OKBLUE, end='')
     if not dryrun:
-        ans = sendrequest("mappings", method="post", data=o)
+        ans = sendrequest("mappings", method="post", data= o.__dict__ )
         print(ans)
 
 
+def translate(code, code_system, fromSite, toSite):
+    return sendrequest('translate',
+                       get = {'code': code,
+                              'code_system': code_system,
+                              'fromSite': fromSite,
+                              'toSite': toSite})
+
+
+def get_code_system(code_system):
+    js = json.loads(sendrequest('code-systems'))['data']
+    cs = [cs for cs in js if cs['code_system'] == code_system]
+    if len(cs) == 1:
+        cs = cs[0]
+        return CodeSystem(code_system = cs['code_system'],
+                          uri = cs['code_system_uri'])
 
 # given the dictionary of {concept: [mapping]},
 # build the object to send as json data,

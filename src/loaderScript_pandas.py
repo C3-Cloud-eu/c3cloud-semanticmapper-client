@@ -244,10 +244,7 @@ def clean_df(df):
 def importFile(f, sheets):
     global tdf
     printcolor("importing {}".format(f), color=bcolors.OKBLUE)
-    # d = {}
-    # wb = load_workbook(f)
     for sheetName in sheets:
-        # sheet = loadPandaStringOnly(load_workbook(wb[sheetName]).values)
         df = pd.read_excel(f, sheet_name = sheetName, dtype= np.object, header=None)
         tdf = df
         print(sheetName, '============')
@@ -258,12 +255,11 @@ def importFile(f, sheets):
             x.concept = '{}|{}'.format(sheetName, x.concept)
             return x
         l = [updateconcept(x) for x in build_items(df)]
-        # print(l[1:10])
-        client.process_items(l)
-        # for o in l:
-        #     print(json.dumps(o))
-        #     print('----')
+    return l
 
+def uploadItems(l):
+    client.process_items(l)
+    
 
 def fetch_data_form_server():
     global codesystems

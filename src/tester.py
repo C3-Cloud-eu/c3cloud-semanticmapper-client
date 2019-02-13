@@ -6,7 +6,7 @@ import numpy as np
 import os
 import importlib
 
-if __name__ == '__main__':
+sif __name__ == '__main__':
     client.interactive = False
     client.baseurl = 'http://localhost:5000/c3-cloud/'
     

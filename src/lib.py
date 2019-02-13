@@ -13,7 +13,11 @@ class bcolors:
 
 def identity(x):
     return x
-    
+
+def updateDict_f(d,key,f):
+    d[key] = f(d[key])
+    return d
+
 # helper function: print with a specified color
 def printcolor(s, color, end='\n'):
     print(color, end='')
