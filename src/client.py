@@ -39,13 +39,15 @@ def sendrequest(url, method="get", get=None, data=None):
     full_url = "{}{}/".format(baseurl, url)
     args = {k: v for k, v in {'params': get, 'json': data}.items() if v}
     # execute either requests.get or requests.post based on the <method> arg
+    print(full_url)
+    print(args)
     r = getattr(requests, method)(url=full_url, **args)
-    if interactive:
-        print(method)
-        print(full_url)
-        print(args)
-        print(r)
-        print(r.status_code)
+    # if interactive:
+    #     print(method)
+    #     print(full_url)
+    #     print(args)
+    #     print(r)
+    #     print(r.status_code)
     if r.status_code != 200:
         report['error'] += 1
         print("error", r.status_code, r.text)
@@ -53,12 +55,13 @@ def sendrequest(url, method="get", get=None, data=None):
 
 
 # send a mapping to upload
-# o: python dict containing the mapping data
 def upload_mapping(o):
+    assert type(o) == Mapping
+    print(o.__dict__)
     printcolor('[uploading <{}>@<{}>]'.format(o.concept, o.site),
                color=bcolors.OKBLUE, end='')
     if not dryrun:
-        ans = sendrequest("mappings", method="post", data= o.__dict__ )
+        ans = sendrequest("mappings", method="post", data= json.loads(o.tojson()) )
         print(ans)
 
 
@@ -108,14 +111,16 @@ def process_items(l):
         # same site, same concept
         codelist = [] if len(m)==0 else  m.loc[ np.array(m.site == e.site)
                          & np.array(m.concept == e.concept), :]
-        print(e.codes)
+        # print(e.codes)
         if len(codelist):
-            print(f"already in db→ <{e.concept}>@<{e.site}>:", end='')
             if( set(codelist.code) == set([ee.code for ee in e.codes])
                and set(codelist.designation) == set([ee.designation for ee in e.codes])):
-                printcolor("[identical]", color=bcolors.OKGREEN, end='')
+                if(verbosity<1):
+                    print(f"already in db→ <{e.concept}>@<{e.site}>:", end='')
+                    printcolor("[identical]", color=bcolors.OKGREEN, end='')
                 report['identical'] += 1
             else:
+                print(f"already in db→ <{e.concept}>@<{e.site}>:", end='')
                 printcolor("[different]", color=bcolors.WARNING, end='')
                 print('\nlocal:')
                 print(e)
@@ -130,14 +135,14 @@ def process_items(l):
                 report['different'] += 1
 
                 if(FORCE):
-                    upload_mapping(o)
+                    upload_mapping(e)
                 else:
                     printcolor('[use --force to overwrite]', color=bcolors.FAIL, end='')
         else:
             upload_mapping(e)
             # print([e[CODE] for e in items], end='')
             report['new'] += 1
-        print('')
+        #print('')
             
                 
                 #             if f(o['codes']) == f(codelist):

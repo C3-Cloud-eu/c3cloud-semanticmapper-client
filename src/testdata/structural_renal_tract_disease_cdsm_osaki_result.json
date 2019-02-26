@@ -18,9 +18,9 @@
             "equivalence": "Narrower"
           },
           {
-            "code": "Q60._",
+            "code": "Q61._",
             "comment": "The target mapping subsumes the meaning of the source concept (e.g. the source is-a target).",
-            "display": "Agenesia renal y otras malformaciones hipopl\u00e1sicas del ri\u00f1\u00f3n",
+            "display": "Enfermedad qu\u00edstica del ri\u00f1\u00f3n",
             "equivalence": "Narrower"
           },
           {
@@ -30,15 +30,9 @@
             "equivalence": "Narrower"
           },
           {
-            "code": "N28.9",
+            "code": "Q60._",
             "comment": "The target mapping subsumes the meaning of the source concept (e.g. the source is-a target).",
-            "display": "Trastorno del ri\u00f1\u00f3n y del ur\u00e9ter, no especificado",
-            "equivalence": "Narrower"
-          },
-          {
-            "code": "Q61._",
-            "comment": "The target mapping subsumes the meaning of the source concept (e.g. the source is-a target).",
-            "display": "Enfermedad qu\u00edstica del ri\u00f1\u00f3n",
+            "display": "Agenesia renal y otras malformaciones hipopl\u00e1sicas del ri\u00f1\u00f3n",
             "equivalence": "Narrower"
           },
           {
@@ -52,13 +46,19 @@
             "comment": "The target mapping subsumes the meaning of the source concept (e.g. the source is-a target).",
             "display": "C\u00e1lculo del ri\u00f1\u00f3n N20.0",
             "equivalence": "Narrower"
+          },
+          {
+            "code": "N28.9",
+            "comment": "The target mapping subsumes the meaning of the source concept (e.g. the source is-a target).",
+            "display": "Trastorno del ri\u00f1\u00f3n y del ur\u00e9ter, no especificado",
+            "equivalence": "Narrower"
           }
         ]
       },
       "source": "http://snomed.info/sct",
-      "sourceVersion": "",
+      "sourceVersion": "unknown",
       "target": "http://hl7.org/fhir/sid/icd-10-es",
-      "targetVersion": ""
+      "targetVersion": "unknown"
     }
   ],
   "resourceType": "ConceptMap",

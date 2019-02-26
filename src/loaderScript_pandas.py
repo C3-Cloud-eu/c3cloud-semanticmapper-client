@@ -10,6 +10,7 @@ import requests
 import unicodedata
 import time
 import schema
+import argparse
 
 from helpers import schema_mapping
 from objects import *
@@ -86,7 +87,7 @@ import client
 
 def good_df_columns(df):
     def is_ok(df):
-        return all([e in df.iloc[1,:].unique() for e in ['Code','Coding System','Designation']])
+        return all([e in list(df.iloc[1,:].unique()) for e in ['Code','Coding System','Designation']])
     ok_sites = [ e for e in df.iloc[0,:].unique() if is_ok(df.iloc[:,[c == e for c in df.iloc[0,:]]]) ]
     return ok_sites
 
@@ -121,7 +122,9 @@ def build_items(df):
 
     def build_site(s, df):
         return [build_item(site=s,concept=c,df=df) for c in set(df.concepts)]
-    return [e for e in flatmap(lambda s: build_site(s, split_df(df, s)), good_df_columns(df)) if e is not None]
+    items = [e for e in flatmap(lambda s: build_site(s, split_df(df, s)), good_df_columns(df)) if e is not None]
+    # print(items)
+    return items
 
 # build all the items for a row
 def build_item(site, concept, df):
@@ -141,9 +144,9 @@ def build_item(site, concept, df):
         # lookup the code system uri from the server
         uri = [cs['code_system_uri'] for cs in codesystems if cs['code_system'] == codesystem][0]
     except IndexError:
-        printcolor('no such URI for {}'.format(codesystem), color=bcolors.FAIL)
+        printcolor(f'no such URI for {codesystem} ({concept}@{site})', color=bcolors.FAIL)
         print(codesystems)
-        report['error'] += 1
+        client.report['error'] += 1
         return None
 
     codesystem = CodeSystem(code_system=codesystem, uri=uri)
@@ -215,6 +218,7 @@ def normalize_fused_cells(sheet, row):
 #     return df.loc[ df.apply(lambda x: not all(x.isna()), axis=1),:]
 
 def clean_df(df):
+    global illegals
     df = df.copy()
     # bad data cells
     def dirty(s):
@@ -225,7 +229,8 @@ def clean_df(df):
             illegal = (s in ['', 'no coding', 'no code', 'no designation', 'n/a']
                        or any([e in s for e in ['tbc by', 'there is no']]))
             if illegal:
-                printerr('{} is illegal'.format(s))
+                illegals.add(s)
+                # printerr('{} is illegal'.format(s))
             # report['error'] += 1 # count as an error?
         return illegal
     # cleaning for all cells
@@ -255,7 +260,8 @@ def importFile(f, sheets):
             x.concept = '{}|{}'.format(sheetName, x.concept)
             return x
         l = [updateconcept(x) for x in build_items(df)]
-    return l
+        client.process_items(l)
+    # return l
 
 def uploadItems(l):
     client.process_items(l)
@@ -289,9 +295,11 @@ def upload_terminologies(f):
         print(resp)
     for x in terminos.iterrows():
         x = x[1]
-        o = {CODE_SYSTEM: x[CODE_SYSTEM],
-             CODE_SYSTEM_URI: x[CODE_SYSTEM_URI]}
-        upload(o)
+        # o = {CODE_SYSTEM: x[CODE_SYSTEM],
+        #      CODE_SYSTEM_URI: x[CODE_SYSTEM_URI]}
+        cs = CodeSystem(code_system=x[CODE_SYSTEM], uri=x[CODE_SYSTEM_URI])
+        upload(json.loads(cs.tojson()))
+        
     fetch_data_form_server()
 
 # ### Main ### #
@@ -304,18 +312,24 @@ def run(configpath):
     print(config)
     if 'terminologies' in config.keys():
         upload_terminologies(fullpath(config['terminologies']))
-        
-    [importFile(fullpath(k), e['sheets'])
-     for k, e in config['mappings'].items()]
+    if 'verbosity' in config.keys():
+        client.verbosity = ['info','warning','error'].index(config['verbosity'])
+    l = [importFile(fullpath(k), e['sheets'])
+        for k, e in config['mappings'].items()]
+    #print(l)
+    #uploadItems(l)
+
 
 
 def main():
     args = sys.argv
     
     global codesystems
+    global illegals
     # global report
     global baseurl
-    
+
+    illegals = set()
     # report = Counter(
     #     identical=0,
     #     different=0,
@@ -323,35 +337,40 @@ def main():
     #     error=0
     # )
 
-    client.interactive = '--interactive' in args
-    client.dryrun = '--dry-run' in args
-    client.FORCE = '--force' in args
-    if '--url' in args:
-        client.baseurl = args[args.index('--url')+1]
-        args.remove('--url')
-        args.remove(client.baseurl)
-        printinfo('Using "{}" as base url'.format(client.baseurl))
-    if client.FORCE:
-        args.remove('--force')
-    if client.dryrun:
-        args.remove('--dry-run')
-    if client.interactive:
-        args.remove('--interactive')
-    if '--NUKE' in args:
-        args.remove('--NUKE')
+    parser = argparse.ArgumentParser(description='load an xlsx file to the terminology mapper')
+    parser.add_argument('--interactive', '-i', help='should the program be interactive', action='store_true')
+    parser.add_argument('--dry-run', '-d', help='read-only mode, do not perform any change', action='store_true')
+    parser.add_argument('--force', '-f', help='in case of conflicts, force overwrite with the local data (by default only adds new mappings)', action='store_true')
+    parser.add_argument('--NUKE', help='reset of the database before running. erases everything and starts with the fresh file', action='store_true')
+    parser.add_argument('--url', '-u', help='url to which the requests should be sent. default localhost:5000')
+    parser.add_argument('--config', '-c', help='path to the config file to use.', required = True)
+    parser.add_argument('--verbose', '-v', help='verbose output', action='store_true')
+
+    p = parser.parse_args()
+
+    client.verbose = 'info' if p.verbose else 'warning'
+    client.interactive = p.interactive
+    client.dryrun = p.dry_run
+    client.FORCE = p.force
+
+    if p.url is None:
+        p.url = 'http://localhost:5000/c3-cloud/'
+      
+    client.baseurl = p.url
+    
+    printinfo('Using "{}" as base url'.format(client.baseurl))
+    
+    if p.NUKE:
         printwarn('deleting everything.')
         input()
         ans = client.sendrequest('all', method='delete')
         print(ans)
     
-    # print(mappings)
-
-    if len(args) < 2:
-        raise(Exception("please provide the path to a yaml configuration file"))
-    else:
-        run(args[1])
+    run(p.config)
+    
     print('done.')
     print('──────────────────────────────')
+    print('illegals:', illegals)
     for category, count in client.report.items():
         print('{}: {}'.format(category, count))
 
