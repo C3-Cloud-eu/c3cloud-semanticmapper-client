@@ -1,6 +1,6 @@
 import json
 import jsonpickle
-from lib import identity
+from c3_cloud_client.lib import identity
 
 class Dictable():
     def from_dict(self, d):
@@ -54,7 +54,6 @@ class Code(Dictable):
                             d['code_system'])
         self.designation = d['designation']
         return self
-    
 
 class Mapping(Dictable):
     def __init__(self, concept : str,
@@ -89,5 +88,12 @@ class Mapping(Dictable):
         self.codes = [f(e) for e in d['codes']]
         self.site = d['site']
         return self
+    def __str__(self):
+        l = []
+        l.append(f'''
+{self.concept}@{self.site}
+ ({self.codes[0].code_system.code_system}@{self.codes[0].code_system.uri}):''')
+        l = l + [f'  - ({c.code}) {c.designation}' for c in self.codes]
+        return '\n'.join(l)
     
     

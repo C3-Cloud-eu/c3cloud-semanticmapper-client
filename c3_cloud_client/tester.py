@@ -6,9 +6,17 @@ import numpy as np
 import os
 import importlib
 
-sif __name__ == '__main__':
+## client.baseurl = 'https://rubis.limics.upmc.fr/c3-cloud/'
+client.__init__()
+client.baseurl = 'http://localhost:8000/c3-cloud/'
+
+client.delete_concept("Procedures|Renal replacement theraphy")
+
+
+
+if __name__ == '__main__':
     client.interactive = False
-    client.baseurl = 'http://localhost:5000/c3-cloud/'
+    ## client.baseurl = 'http://localhost:5000/c3-cloud/'
     
     importlib.reload(client)
     client.__init__()

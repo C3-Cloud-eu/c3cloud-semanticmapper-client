@@ -12,10 +12,10 @@ import time
 import schema
 import argparse
 
-from helpers import schema_mapping
-from objects import *
-from lib import *
-import client
+from c3_cloud_client.helpers import schema_mapping
+from c3_cloud_client.objects import *
+from c3_cloud_client.lib import *
+from c3_cloud_client import client
 
 # assumptions about the xlsx structure:
 # [Concepts][        site name 1       ][        site name 2       ]...

@@ -1,0 +1,24 @@
+{
+  "group": [
+    {
+      "element": {
+        "code": "BRO", 
+        "display": "Brother", 
+        "target": [
+          {
+            "code": "BRO", 
+            "comment": "The definitions of the concepts mean the same thing (including when structural implications of meaning are considered) (i.e. extensionally identical).", 
+            "display": "Hermano", 
+            "equivalence": "Equal"
+          }
+        ]
+      }, 
+      "source": "http://hl7.org/fhir/v3/RoleCode", 
+      "sourceVersion": "unknown", 
+      "target": "http://hl7.org/fhir/v3/RoleCode", 
+      "targetVersion": "unknown"
+    }
+  ], 
+  "resourceType": "ConceptMap", 
+  "title": "mapping of 'C3DP_CDSM_PROFILE|Brother' from CDSM (HL7-ROLE) to OSAKI (HL7-ROLE)"
+}

@@ -1,0 +1,14 @@
+{
+  "site": "EFG",
+  "concept": "Test|abc",
+  "codes": [
+    {
+      "code_system": {
+        "code_system": "LOINC",
+        "uri": "http://loinc.org"
+      },
+      "code": "24331-1",
+      "designation": "Perfil lípidos HCFA 96:Propiedades mixtas (sólo paneles):Punto temporal:Suero o Plasma:Qn:"
+    }
+  ]
+}

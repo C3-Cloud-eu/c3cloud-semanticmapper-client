@@ -6,16 +6,18 @@ import numpy as np
 import json
 import schema
 
-from objects import *
-from lib import *
-from helpers import schema_mapping
+from c3_cloud_client.objects import *
+from c3_cloud_client.lib import *
+from c3_cloud_client.helpers import schema_mapping
 
 
 def __init__():
-    global report, FORCE, dryrun, interactive
+    global report, FORCE, dryrun, interactive, APIKEY
     FORCE = False
     dryrun = False
     interactive = False
+    with open("./apikey", 'r') as f:
+        APIKEY = f.read()
     report = Counter(
         identical=0,
         different=0,
@@ -37,7 +39,7 @@ def __init__():
 # get: GET parameters
 def sendrequest(url, method="get", get=None, data=None):
     full_url = "{}{}/".format(baseurl, url)
-    args = {k: v for k, v in {'params': get, 'json': data}.items() if v}
+    args = {k: v for k, v in {'params': get, 'json': data, 'headers':{'key': APIKEY}}.items() if v}
     # execute either requests.get or requests.post based on the <method> arg
     print(full_url)
     print(args)
@@ -51,7 +53,7 @@ def sendrequest(url, method="get", get=None, data=None):
     if r.status_code != 200:
         report['error'] += 1
         print("error", r.status_code, r.text)
-    return(r.text)
+    return r
 
 
 # send a mapping to upload
@@ -59,12 +61,29 @@ def upload_mapping(o):
     assert type(o) == Mapping
     print(o.__dict__)
     printcolor('[uploading <{}>@<{}>]'.format(o.concept, o.site),
-               color=bcolors.OKBLUE, end='')
+               color=bcolors.OKBLUE)
     if not dryrun:
         ans = sendrequest("mappings", method="post", data= json.loads(o.tojson()) )
-        print(ans)
+        return(ans)
 
+def upload_concept(o):
+    assert type(o) == str
+    o = {"concept": o}
+    printcolor('[uploading {}]'.format(o),
+               color=bcolors.OKBLUE)
+    if not dryrun:
+        ans = sendrequest("concepts", method="post", data= o )
+        return(ans)
 
+        
+def delete_concept(concept):
+    assert type(concept) == str
+    printcolor(f'[deleting concept {concept}]', color=bcolors.OKBLUE)
+    if not dryrun:
+        ans = sendrequest("concepts", method="delete", data= {'concept': concept} )
+        return(ans)
+
+        
 def translate(code, code_system, fromSite, toSite):
     return sendrequest('translate',
                        get = {'code': code,
@@ -74,20 +93,31 @@ def translate(code, code_system, fromSite, toSite):
 
 
 def get_code_system(code_system):
-    js = json.loads(sendrequest('code-systems'))['data']
+    js = json.loads(sendrequest('code-systems').text)['data']
     cs = [cs for cs in js if cs['code_system'] == code_system]
     if len(cs) == 1:
         cs = cs[0]
         return CodeSystem(code_system = cs['code_system'],
                           uri = cs['code_system_uri'])
 
+def get_mapping(site,concept):
+    js = json.loads(sendrequest('mappings', get={'site': site, 'concept': concept}).text)['data']
+    d = dict(site=js[0]['site'],
+             concept=js[0]['concept'],
+             codes=[ dict(code=e['code'],
+                          designation=e['designation'],
+                          code_system=dict(code_system=e['code_system'],
+                                           uri=e['code_system_uri'])) for e in js])
+    return Mapping(**d)
+
+    
 # given the dictionary of {concept: [mapping]},
 # build the object to send as json data,
 # check wether it already exist and decide to upload it or not
 def process_items(l):
     global ll
-    print('process items')
     ll = l
+    print('process items')
     assert not any([e is None for e in l])
     
     # # sorted lists for objects comparison
@@ -103,9 +133,12 @@ def process_items(l):
 
     # "pretty print"
     def disp(title, l):
-           print('\n' +
-                 '\n'.join([title+':'] + [str([e, i[e]]) for i in l for e in sorted(i.keys())]) +
-                 '\n')
+        print('\n' +
+              '\n'.join([title+':'] + [str([e, i[e]]) for i in l for e in sorted(i.keys())]) +
+              '\n')
+
+    def show_codes_server(l):
+        return '\n'.join([f'  - ({c.code}) {c.designation}' for c in l.itertuples()])
 
     for e in l:
         # same site, same concept
@@ -115,29 +148,25 @@ def process_items(l):
         if len(codelist):
             if( set(codelist.code) == set([ee.code for ee in e.codes])
                and set(codelist.designation) == set([ee.designation for ee in e.codes])):
-                if(verbosity<1):
-                    print(f"already in db→ <{e.concept}>@<{e.site}>:", end='')
+                if(verbose=='info'):
+                    print(f"already in db→ <{e.concept}>@<{e.site}>:", end='\n')
                     printcolor("[identical]", color=bcolors.OKGREEN, end='')
                 report['identical'] += 1
             else:
+                print('────────────────────────────')
                 print(f"already in db→ <{e.concept}>@<{e.site}>:", end='')
-                printcolor("[different]", color=bcolors.WARNING, end='')
-                print('\nlocal:')
+                printcolor("[different]", color=bcolors.WARNING)
+                print('local:')
                 print(e)
-                print('--------')
-                print( set(codelist.code), set(codelist.designation) )
-                print('========================')
                 print('server:')
-                print(codelist)
-                #print('--------')
-                #print(set(m.code), set(m.designation))
+                print( show_codes_server(codelist) )
                 print('\n')
                 report['different'] += 1
 
                 if(FORCE):
                     upload_mapping(e)
                 else:
-                    printcolor('[use --force to overwrite]', color=bcolors.FAIL, end='')
+                    printcolor('[use --force to overwrite]', color=bcolors.FAIL)
         else:
             upload_mapping(e)
             # print([e[CODE] for e in items], end='')

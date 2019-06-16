@@ -1,0 +1,24 @@
+{
+  "group": [
+    {
+      "element": {
+        "code": "influenza_vaccines", 
+        "display": "Vacuna contra la gripe", 
+        "target": [
+          {
+            "code": "influenza_vaccines", 
+            "comment": "The definitions of the concepts mean the same thing (including when structural implications of meaning are considered) (i.e. extensionally identical).", 
+            "display": "influensavaccin", 
+            "equivalence": "Equal"
+          }
+        ]
+      }, 
+      "source": "http://www.c3-cloud.eu/fhir/clinical-concept", 
+      "sourceVersion": "unknown", 
+      "target": "http://www.c3-cloud.eu/fhir/clinical-concept", 
+      "targetVersion": "unknown"
+    }
+  ], 
+  "resourceType": "ConceptMap", 
+  "title": "mapping of 'C3DP_CDSM_PROFILE|Influenza vaccines' from OSAKI (C3-Cloud) to RJH (C3-Cloud)"
+}
