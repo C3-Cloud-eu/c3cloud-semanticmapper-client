@@ -50,28 +50,54 @@ to source your regular shell configuration.
 
 ### Docker
 
+pull the container:
+
+```sh
+docker pull mikaeldusenne/c3cloudsis_client
+```
+
+running it requires to mount the directory containing the required informations:
+
+```sh
+docker run -v /absolute/path/to/data/folder:/app/data \\
+    mikaeldusenne/c3cloudsis_client \\
+	python -m c3cloud_semanticmapper_client \\
+	--apikey-path data/apikey \\
+	--config data/import.yaml \\
+	--url 'https://rubis.limics.upmc.fr/c3-cloud/' \\
+	--dry-run
+```
+
+where `/absolute/path/to/data/folder` contains the data to import (i.e. the `import.yaml` file and the excel sheet to load) and the `apikey` file containing the key to authorize requests in the API.
 	
 ## Running the script
 
 
 ```sh
-python -m c3cloudsis-client path/to/configuration.yaml --api-key [-k] /path/to/apikey/file --config /path/to/config.yaml  [--force] [--dry-run]
+python -m c3cloud_semanticmapper_client \\
+	--apikey-path data/apikey \\
+	--config data/import.yaml \\
+	--url 'https://rubis.limics.upmc.fr/c3-cloud/' \\
+	[--dry-run] [--force] [--delete]
 ```
 
 parameters:
 
-> the path to the yaml configuration file.
+> `--config` the path to the yaml configuration file.
+
+> `--apikey-path` the path to the file containing the API key.
+
+> `--url` url to the API
 
 options:
 
 > `--force` → force overriding data on the server if the mapping already exists and is different than the one provided in the excel file
 
+> `--dry-run` → simulate import: do not perform any modification of the server data
 
-Sample running example:
+> `--delete` → delete concepts and mapping not present in the excel sheet. Recommended to use if performing a whole-data update (i.e. the excel sheet contains the entirety of the data supposed to be on the server).
 
-```sh
-python loaderScript.py ../data/import.yaml --force
-```
+
 
 ## Logs and behaviour
 
