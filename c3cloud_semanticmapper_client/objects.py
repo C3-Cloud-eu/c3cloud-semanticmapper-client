@@ -1,6 +1,6 @@
 import json
 import jsonpickle
-from c3_cloud_client.lib import identity
+from c3cloud_semanticmapper_client.lib import identity
 
 class Dictable():
     def from_dict(self, d):

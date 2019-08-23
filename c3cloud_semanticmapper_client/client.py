@@ -6,9 +6,9 @@ import numpy as np
 import json
 import schema
 
-from c3_cloud_client.objects import *
-from c3_cloud_client.lib import *
-from c3_cloud_client.helpers import schema_mapping
+from c3cloud_semanticmapper_client.objects import *
+from c3cloud_semanticmapper_client.lib import *
+from c3cloud_semanticmapper_client.helpers import schema_mapping
 
 
 def __init__(apikey_path):

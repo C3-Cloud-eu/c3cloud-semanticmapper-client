@@ -1,33 +1,61 @@
-# importing xlsx files to the C3-cloud semantic mapper
+# C3-cloud semantic mapper client updater
 
-## YAML configuration file
+This package parses xlsx files containing the data for the Semantic Mapper of C3-cloud,  
+and allows to visualize new/modified/outdated concepts and to upload new data to the server
 
-Please refer to the example yaml file provided
+## Requirements
 
-This file is used by the script to know where the data are located.
-It tells it which files to load, which sheets, and which columns contain the data for the mappings to upload.
+Python 3.7
 
-## Excel file
+## Installation
 
-The structure of the xslx file is a bit flexible thanks to the YAML configuration, but some general assumptions are made:
+### Github
 
-- the very first row of each sheet shall contain the names of the different sites 
-- the second row is supposed to contain additional title information (that are not used by the script)
-- the third row is the first row containing mappings
+Clone the repository and `cd` to it:
 
-- the first column shall contain the mappings designations
-- each site shall be organized in three columns: 
-    - first column: code system
-	- second column: code
-	- third column: code's designation
-	
-Please refer to the provided excel file for an example of what is expected.
+``` sh
+git clone https://github.com/mikaeldusenne/c3cloud-semanticmapper-client
+cd c3cloud-semanticmapper-client
+```
+
+Install the package:
+
+```sh
+python setup.py install
+```
+
+#### Virtual environment
+
+If you do not wish to make a system-wide installation, you can use a virtual environment:
+
+```
+python -m venv VENV
+```
+
+To activate the virtual environment, run (before installing or using the package) :
+
+```
+source VENV/bin/activate
+```
+
+You should then see a `(VENV)` at the beginning of your shell prompt.
+
+To disable the virtual environment once you are done using the package, run:
+
+```
+source ~/.bash_profile
+```
+
+to source your regular shell configuration.
+
+### Docker
+
 	
 ## Running the script
 
 
 ```sh
-python loaderScript.py path/to/configuration.yaml [--force]
+python -m c3cloudsis-client path/to/configuration.yaml --api-key [-k] /path/to/apikey/file --config /path/to/config.yaml  [--force] [--dry-run]
 ```
 
 parameters:

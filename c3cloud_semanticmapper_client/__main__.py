@@ -1,9 +1,9 @@
-from c3_cloud_client import client
+from c3cloud_semanticmapper_client import client
 import sys
 import argparse
-from c3_cloud_client.lib import *
-from c3_cloud_client.c3_cloud_excel_loader import *
-from c3_cloud_client import c3_cloud_excel_loader
+from c3cloud_semanticmapper_client.lib import *
+from c3cloud_semanticmapper_client.c3_cloud_excel_loader import *
+from c3cloud_semanticmapper_client import c3_cloud_excel_loader
 
 def run(configpath):
     dirname = os.path.dirname(configpath)

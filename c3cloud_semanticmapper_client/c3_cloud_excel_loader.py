@@ -15,10 +15,10 @@ import functools
 
 sys.path.append('/home/mika/Bookmarks/c3_cloud_client')
 
-from c3_cloud_client.helpers import schema_mapping
-from c3_cloud_client.objects import *
-from c3_cloud_client.lib import *
-from c3_cloud_client import client
+from c3cloud_semanticmapper_client.helpers import schema_mapping
+from c3cloud_semanticmapper_client.objects import *
+from c3cloud_semanticmapper_client.lib import *
+from c3cloud_semanticmapper_client import client
 
 # assumptions about the xlsx structure:
 # [Concepts][        site name 1       ][        site name 2       ]...
