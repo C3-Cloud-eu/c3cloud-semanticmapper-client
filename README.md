@@ -60,7 +60,7 @@ running it requires to mount the directory containing the required informations:
 
 ```sh
 docker run -v /absolute/path/to/data/folder:/app/data \\
-    mikaeldusenne/c3cloudsis_client \\
+	mikaeldusenne/c3cloudsis_client \\
 	python -m c3cloud_semanticmapper_client \\
 	--apikey-path data/apikey \\
 	--config data/import.yaml \\
