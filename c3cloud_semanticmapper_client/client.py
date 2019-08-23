@@ -17,7 +17,7 @@ def __init__(apikey_path):
     dryrun = False
     interactive = False
     with open(apikey_path, 'r') as f:
-        APIKEY = f.read()
+        APIKEY = f.read().strip()
     report = Counter(
         identical=0,
         different=0,
