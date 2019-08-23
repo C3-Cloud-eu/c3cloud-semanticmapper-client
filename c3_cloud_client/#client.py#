@@ -11,12 +11,12 @@ from c3_cloud_client.lib import *
 from c3_cloud_client.helpers import schema_mapping
 
 
-def __init__(apikey_path):
+def __init__():
     global report, FORCE, dryrun, interactive, APIKEY
     FORCE = False
     dryrun = False
     interactive = False
-    with open(apikey_path, 'r') as f:
+    with open("./apikey", 'r') as f:
         APIKEY = f.read()
     report = Counter(
         identical=0,
@@ -32,20 +32,24 @@ def __init__(apikey_path):
 # baseurl = "http://18.205.143.209/c3-cloud/"
 
 
+# send a request to the REST API
+# url: the part of the URL coming *after* the baseurl
+# method: "get" or "post"
+# data: json encoded data to send as the POST request body
+# get: GET parameters
 def sendrequest(url, method="get", get=None, data=None):
-    '''
-    send a request to the REST API
-    url: the part of the URL coming *after* the baseurl
-    method: "get" or "post"
-    data: json encoded data to send as the POST request body
-    get: GET parameters
-    '''
     full_url = "{}{}/".format(baseurl, url)
     args = {k: v for k, v in {'params': get, 'json': data, 'headers':{'key': APIKEY}}.items() if v}
     # execute either requests.get or requests.post based on the <method> arg
     print(full_url)
     print(args)
     r = getattr(requests, method)(url=full_url, **args)
+    # if interactive:
+    #     print(method)
+    #     print(full_url)
+    #     print(args)
+    #     print(r)
+    #     print(r.status_code)
     if r.status_code != 200:
         report['error'] += 1
         print("error", r.status_code, r.text)
@@ -55,7 +59,7 @@ def sendrequest(url, method="get", get=None, data=None):
 # send a mapping to upload
 def upload_mapping(o):
     assert type(o) == Mapping
-    ## print(o.__dict__)
+    print(o.__dict__)
     printcolor('[uploading <{}>@<{}>]'.format(o.concept, o.site),
                color=bcolors.OKBLUE)
     if not dryrun:
@@ -140,16 +144,10 @@ def process_items(l):
         # same site, same concept
         codelist = [] if len(m)==0 else  m.loc[ np.array(m.site == e.site)
                          & np.array(m.concept == e.concept), :]
-        # print('+++++++++++++++++++++++')
-        # print(l)
-        # print(codelist)
-        # quit()
         # print(e.codes)
         if len(codelist):
             if( set(codelist.code) == set([ee.code for ee in e.codes])
-               and set(codelist.designation) == set([ee.designation for ee in e.codes])
-               and set(codelist.code_system_uri) == set([ee.code_system.uri for ee in e.codes])
-               ):
+               and set(codelist.designation) == set([ee.designation for ee in e.codes])):
                 if(verbose=='info'):
                     print(f"already in db→ <{e.concept}>@<{e.site}>:", end='\n')
                     printcolor("[identical]", color=bcolors.OKGREEN, end='')

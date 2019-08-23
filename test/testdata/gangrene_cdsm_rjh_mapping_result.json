@@ -1,0 +1,42 @@
+{
+  "group": [
+    {
+      "element": {
+        "code": "372070002",
+        "display": "Gangrenous disorder (disorder)",
+        "target": [
+          {
+            "code": "R02-",
+            "comment": "The target mapping subsumes the meaning of the source concept (e.g. the source is-a target).",
+            "display": "Gangrän",
+            "equivalence": "Narrower"
+          },
+          {
+            "code": "E105B",
+            "comment": "The target mapping subsumes the meaning of the source concept (e.g. the source is-a target).",
+            "display": "Gangrän",
+            "equivalence": "Narrower"
+          },
+          {
+            "code": "I702A",
+            "comment": "The target mapping subsumes the meaning of the source concept (e.g. the source is-a target).",
+            "display": "Gangrän",
+            "equivalence": "Narrower"
+          },
+          {
+            "code": "E115B",
+            "comment": "The target mapping subsumes the meaning of the source concept (e.g. the source is-a target).",
+            "display": "Gangrän",
+            "equivalence": "Narrower"
+          }
+        ]
+      },
+      "source": "http://snomed.info/sct",
+      "sourceVersion": "unknown",
+      "target": "urn:oid:1.2.752.116.1.1.1.1.3",
+      "targetVersion": "unknown"
+    }
+  ],
+  "resourceType": "ConceptMap",
+  "title": "mapping of 'Conditions|gangrene' from CDSM (SNOMED CT) to RJH (ICD-10-SE)"
+}

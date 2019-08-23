@@ -1,0 +1,12 @@
+{
+  "site": "RJH",
+  "concept": "Chronic ischemic heart disease",
+  "codes": [
+    {
+      "code_system": "ICD-10-SE",
+      "code_system_uri": "uri:oid:ICD-10-SE_oid",
+      "code": "I25",
+      "designation": "Kroniska ischemiska hjärtsjukdomar!"
+    }
+  ]
+}

@@ -11,6 +11,9 @@ import unicodedata
 import time
 import schema
 import argparse
+import functools
+
+sys.path.append('/home/mika/Bookmarks/c3_cloud_client')
 
 from c3_cloud_client.helpers import schema_mapping
 from c3_cloud_client.objects import *
@@ -93,7 +96,6 @@ def good_df_columns(df):
 
 # dataframe -> {site: subset_dataframe} -> [mapping]
 def build_items(df):
-    global tdf
     concepts = list(df.iloc[2:, 0])
 
     concept = ''
@@ -111,7 +113,6 @@ def build_items(df):
         # remove first two rows and add index
         df = df.iloc[2:,:]
         df['concepts'] = concepts
-        # tdf = df
         # print(df.columns)
         df = df[['concepts', 'Coding System', 'Code', 'Designation']]
         # clean empty lines
@@ -128,47 +129,43 @@ def build_items(df):
 
 # build all the items for a row
 def build_item(site, concept, df):
-    global tdf
-    tdf = df
     if len(df) == 0:
         print('no row')
         return None
 
     df = df.loc[df.concepts == concept,:]
     # print(df)
-    
-    assert len(df['Coding System'].unique()) == 1
-    codesystem = list(df['Coding System'])[0]
-    
-    try:
-        # lookup the code system uri from the server
-        uri = [cs['code_system_uri'] for cs in codesystems if cs['code_system'] == codesystem][0]
-    except IndexError:
-        printcolor(f'no such URI for {codesystem} ({concept}@{site})', color=bcolors.FAIL)
-        print(codesystems)
-        client.report['error'] += 1
-        return None
 
-    codesystem = CodeSystem(code_system=codesystem, uri=uri)
     
-    # def f(code, designation):
-    #     return {'code': code,
-    #             'designation': designation,
-    #             'code_system': codesystem,
-    #             'code_system_uri': uri}
-    # # take the unique of the codes 
-    # codes = [f(*t) for t in list(set(zip(df['Code'], df['Designation'])))]
-    codes = [Code(code=c, designation=d, code_system=codesystem) for c, d in list(set(zip(df['Code'], df['Designation'])))]
-    # add the uri to the POST data to send
-    # o['code_system_uri'] = uri
+    ## assert len(df['Coding System'].unique()) == 1
+    ## codesystem = list(df['Coding System'])[0]
+
+    def lookup_uri(codesystem):
+        try:
+            # lookup the code system uri from the server
+            uri = [cs['code_system_uri'] for cs in codesystems if cs['code_system'] == codesystem][0]
+            return uri
+        except IndexError:
+            printcolor(f'no such URI for {codesystem} ({concept}@{site})', color=bcolors.FAIL)
+            
+            print(codesystems)
+            client.report['error'] += 1
+            return None
+
+    ## codesystem = CodeSystem(code_system=codesystem, uri=uri)
     
+    uris = [lookup_uri(e) for e in df['Coding System']]
+    
+    if(any(e is None for e in uris)):
+        return None
+    
+    codes = ([Code(code=c, designation=d, code_system=CodeSystem(code_system=cs, uri=uri)) for c, d, cs, uri in list(set(zip(df['Code'], df['Designation'], df['Coding System'],uris)))])
+    ## codes = [Code(code=c, designation=d, code_system=cs) for c, d, cs in list(set(zip(df['Code'], df['Designation'], css)))]
+    ## print(codes)
     
     o = Mapping(site = site,
                 codes = codes,
                 concept = concept)
-    # assert schema_mapping.is_valid(o)
-    # print(o.codes)
-    # quit()
 
     
     return o
@@ -247,12 +244,10 @@ def clean_df(df):
 
     
 def importFile(f, sheets):
-    global tdf
     printcolor("importing {}".format(f), color=bcolors.OKBLUE)
-    for sheetName in sheets:
+    
+    def build_sheet(sheetName):
         df = pd.read_excel(f, sheet_name = sheetName, dtype= np.object, header=None)
-        tdf = df
-        print(sheetName, '============')
         df = clean_df(df)
         df = normalize_fused_cells(df,0)
 
@@ -260,9 +255,17 @@ def importFile(f, sheets):
             x.concept = '{}|{}'.format(sheetName, x.concept)
             return x
         l = [updateconcept(x) for x in build_items(df)]
-        client.process_items(l)
-    # return l
-
+        return l
+    
+    l = flatmap(build_sheet, sheets)
+    client.process_items(l)
+    
+    local_concepts = list(map( lambda e: e.concept, l ))
+    ## printwarn('warning: did not check for outdated concepts.')
+    for c in [e for e in concepts if e not in local_concepts]:
+        ## printwarn(f'! Did NOT delete {c} !')
+        client.delete_concept(c)
+ 
 def uploadItems(l):
     client.process_items(l)
     
@@ -270,9 +273,12 @@ def uploadItems(l):
 def fetch_data_form_server():
     global codesystems
     global mappings
-    client.jsondata = json.loads(client.sendrequest(url="all"))['data']
+    global concepts
+    client.jsondata = json.loads(client.sendrequest(url="all").text)['data']
     client.mappings = client.jsondata['mappings']
+    client.concepts = client.jsondata['concepts']
     client.codesystems = client.jsondata['code_systems']
+    concepts = client.jsondata['concepts']
     mappings = client.jsondata['mappings']
     codesystems = client.jsondata['code_systems']
 
@@ -281,7 +287,7 @@ def load_config(configpath):
     global mappings
     with open(configpath) as f:
         y = yaml.load(f)
-        fetch_data_form_server()
+    # fetch_data_form_server()
     return y
 
 # ### terminologies uris ### #
@@ -304,93 +310,79 @@ def upload_terminologies(f):
 
 # ### Main ### #
 
-def run(configpath):
-    dirname = os.path.dirname(configpath)
-    def fullpath(e):
-        return os.path.join(dirname, e)
-    config = load_config(configpath)
-    print(config)
-    if 'terminologies' in config.keys():
-        upload_terminologies(fullpath(config['terminologies']))
-    if 'verbosity' in config.keys():
-        client.verbosity = ['info','warning','error'].index(config['verbosity'])
-    l = [importFile(fullpath(k), e['sheets'])
-        for k, e in config['mappings'].items()]
-    #print(l)
-    #uploadItems(l)
+# def run(configpath):
+#     dirname = os.path.dirname(configpath)
+#     def fullpath(e):
+#         return os.path.join(dirname, e)
+#     fetch_data_form_server()
+#     config = load_config(configpath)
+#     print(config)
+#     if 'terminologies' in config.keys():
+#         upload_terminologies(fullpath(config['terminologies']))
+#     if 'verbosity' in config.keys():
+#         client.verbosity = ['info','warning','error'].index(config['verbosity'])
+#     l = [importFile(fullpath(k), e['sheets'])
+#         for k, e in config['mappings'].items()]
+#     #print(l)
+#     #uploadItems(l)
 
 
 
-def main():
-    args = sys.argv
+# def main():
+#     args = sys.argv
     
-    global codesystems
-    global illegals
-    # global report
-    global baseurl
+#     global codesystems
+#     global illegals
+#     # global report
+#     global baseurl
 
-    illegals = set()
-    # report = Counter(
-    #     identical=0,
-    #     different=0,
-    #     new=0,
-    #     error=0
-    # )
+#     illegals = set()
+#     # report = Counter(
+#     #     identical=0,
+#     #     different=0,
+#     #     new=0,
+#     #     error=0
+#     # )
 
-    parser = argparse.ArgumentParser(description='load an xlsx file to the terminology mapper')
-    parser.add_argument('--interactive', '-i', help='should the program be interactive', action='store_true')
-    parser.add_argument('--dry-run', '-d', help='read-only mode, do not perform any change', action='store_true')
-    parser.add_argument('--force', '-f', help='in case of conflicts, force overwrite with the local data (by default only adds new mappings)', action='store_true')
-    parser.add_argument('--NUKE', help='reset of the database before running. erases everything and starts with the fresh file', action='store_true')
-    parser.add_argument('--url', '-u', help='url to which the requests should be sent. default localhost:5000')
-    parser.add_argument('--config', '-c', help='path to the config file to use.', required = True)
-    parser.add_argument('--verbose', '-v', help='verbose output', action='store_true')
+#     parser = argparse.ArgumentParser(description='load an xlsx file to the terminology mapper')
+#     parser.add_argument('--interactive', '-i', help='should the program be interactive', action='store_true')
+#     parser.add_argument('--dry-run', '-d', help='read-only mode, do not perform any change', action='store_true')
+#     parser.add_argument('--force', '-f', help='in case of conflicts, force overwrite with the local data (by default only adds new mappings)', action='store_true')
+#     parser.add_argument('--NUKE', help='reset of the database before running. erases everything and starts with the fresh file', action='store_true')
+#     parser.add_argument('--url', '-u', help='url to which the requests should be sent. default localhost:5000')
+#     parser.add_argument('--config', '-c', help='path to the config file to use.', required = True)
+#     parser.add_argument('--verbose', '-v', help='verbose output', action='store_true')
 
-    p = parser.parse_args()
+#     p = parser.parse_args()
 
-    client.verbose = 'info' if p.verbose else 'warning'
-    client.interactive = p.interactive
-    client.dryrun = p.dry_run
-    client.FORCE = p.force
+#     client.verbose = 'info' if p.verbose else 'warning'
+#     client.interactive = p.interactive
+#     client.dryrun = p.dry_run
+#     client.FORCE = p.force
 
-    if p.url is None:
-        p.url = 'http://localhost:5000/c3-cloud/'
+#     if p.url is None:
+#         p.url = 'http://localhost:5000/c3-cloud/'
       
-    client.baseurl = p.url
+#     client.baseurl = p.url
     
-    printinfo('Using "{}" as base url'.format(client.baseurl))
+#     printinfo('Using "{}" as base url'.format(client.baseurl))
     
-    if p.NUKE:
-        printwarn('deleting everything.')
-        input()
-        ans = client.sendrequest('all', method='delete')
-        print(ans)
+#     if p.NUKE:
+#         printwarn('!!!!!!!! !!! deleting everything !!! !!!!!!!!')
+#         input()
+#         ans = client.sendrequest('all', method='delete')
+#         print(ans)
     
-    run(p.config)
+#     run(p.config)
     
-    print('done.')
-    print('──────────────────────────────')
-    print('illegals:', illegals)
-    for category, count in client.report.items():
-        print('{}: {}'.format(category, count))
+#     print('done.')
+#     print('──────────────────────────────')
+#     print('illegals:', illegals)
+#     for category, count in client.report.items():
+#         print('{}: {}'.format(category, count))
 
 
-if __name__ == "__main__":
-    client.__init__()
-    main()
-
-# def tests_tmp():
-
-# # [str(resolveCell(df, df['Observation & Units'], Coord(l,1))) for l in 'ABCDEFGHIJKLMNOPQRSTUV']
-
-# f = '../data/data_2019_02_07/SemMapper-CDSMCodeMappings-with-cdsm-profile-v2-7Feb2019.xlsx'
-# df = load_workbook(f)
-
-# # for sh in config['sheets']:
-# for sh in ["C3DP_CDSM_PROFILE", "Observations", "Conditions", "Medications", "Family History", "Procedures", "Observations & Units"]:
-#     sheet = pd.DataFrame(df[sh].values)
-
-
-
-    
+# if __name__ == "__main__":
+#     client.__init__()
+#     main()
 

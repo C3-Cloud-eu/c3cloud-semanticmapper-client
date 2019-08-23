@@ -5,15 +5,45 @@ import pandas as pd
 import jsondiff
 
 client.__init__()
-client.baseurl = 'https://rubis.limics.upmc.fr/c3-cloud/'
-# client.baseurl = 'http://localhost:8000/c3-cloud/'
+# client.baseurl = 'https://rubis.limics.upmc.fr/c3-cloud/'
+client.baseurl = 'http://localhost:5000/c3-cloud/'
+
+
+def sortjson(e):
+    def order_for_list(e):
+        if type(e) == list:
+            return ''.join(order_for_list(ee) for ee in e)
+        elif type(e) == dict:
+            return ''.join(
+                ''.join([k, order_for_list( e[k] ) ]) for k in sorted(e.keys())
+                )
+        else:
+            return str(e)
+    
+    if type(e) == dict:
+        ans = { k: sortjson(e[k]) for k in sorted(e.keys())  }
+    elif type(e) == list:
+        ans = [ sortjson(v) for v in e ]
+        if len(e) > 0 and type(e[0]) == dict:
+            ans = sorted(ans, key = order_for_list)
+        else:
+            ans = sorted(ans)
+    else:
+        ans = e
+    return ans
+
 
 def comparedicts(a, b):
+    a = sortjson(a)
+    b = sortjson(b)
+    
     d = jsondiff.diff(a, b)
     if len(d):
-        print(a)
+        print(json.dumps(a,
+                         indent=2))
         print('========')
-        print(b)
+        print(json.dumps(b,
+                         indent=2))
         print('================')
         print(d)
     assert len(d) == 0
@@ -43,7 +73,7 @@ def test_upload():
         "concept": con, "site": si})
     
     client.upload_mapping(m)
-    ans = client.sendrequest('mappings', get = {'site':'EFG', 'concept':'test'}).text
+    ans = client.sendrequest('mappings', get = {'site':'EFG', 'concept':con}).text
     print("test upload ans:", ans)
     assert json.loads(ans)['data'] == [{'code': c, 'code_system': cs, 'code_system_uri': uri, 'concept': con, 'designation': des, 'site': si}]
 
@@ -96,12 +126,12 @@ def translatorcheckerr(c,cs,f,t,shouldbe):
                       loadjsonfile(shouldbe))    
     
 
-def test_multi_code_translate_structural_renal_tract_disease():
-    translatorcheckerr('118642009',
+def test_multi_code_gangrene():
+    translatorcheckerr('372070002',
                        'SNOMED CT',
                        'CDSM',
-                       'OSAKI',
-                       './testdata/structural_renal_tract_disease_cdsm_osaki_result.json')
+                       'RJH',
+                       './testdata/gangrene_cdsm_rjh_mapping_result.json')
 
 
 ## print(translate("BRO", get_code_system('HL7-ROLE').uri, 'CDSM', 'OSAKI'))
@@ -138,5 +168,52 @@ def test_update_existing_mapping():
     print("observed: ", m)
     
     assert m == morig
+    
+
+def test_multiterminology_mapping():
+    translatorcheckerr("42343007",
+                       "SNOMED CT",
+                       "CDSM",
+                       "SWFT",
+                       './testdata/mapping_multitermino_a.json'
+                       )
+    
+    translatorcheckerr("G580",
+                   "Read",
+                   "SWFT",
+                   "CDSM",
+                   './testdata/mapping_multitermino_b.json'
+                   )
+
+    translatorcheckerr("I500",
+                   "ICD-10-UK",
+                   "SWFT",
+                   "CDSM",
+                   './testdata/mapping_multitermino_c.json'
+                   )
+
+    
+
+    
+    
+# def test_update_existing_mapping_bis():
+#     d  = loadjsonfile("./testdata/mapping_update_hfca_lipid__data.json")
+#     dd = loadjsonfile("./testdata/mapping_update_hfca_lipid__data.json")
+#     dd['concept'] = "something else"
+
+#     morig  = objects.Mapping(**d)
+#     mmodif = objects.Mapping(**dd)
+
+#     client.upload_mapping(mmodif)
+#     sendrequest("mappings", method="post",
+#                 data= {'old': json.loads(mmodif.tojson()),
+#                        'new': json.loads(morig.tojson())})
+
+#     m = client.get_mapping(site=d['site'], concept=d['concept'])
+#     print("original: ", morig)
+#     print("modified: ", mmodif)
+#     print("observed: ", m)
+    
+#     assert m == morig
     
     

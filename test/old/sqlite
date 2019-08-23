@@ -1,0 +1,10 @@
+.open db/sqlitedb
+
+
+select * from mappings m
+  inner join codes c on (c.oid=m.code)
+  inner join sites s on (s.oid=m.site)
+  inner join concepts on (concepts.oid=m.concept)
+  where concepts.concept like 'AII%'
+  ;
+  

@@ -1,0 +1,24 @@
+{
+  "group": [
+    {
+      "element": {
+        "code": "G580",
+        "display": "Congestive heart failure",
+        "target": [
+          {
+            "code": "42343007",
+            "comment": "This is an explicit assertion that there is no mapping between the source and target concept.",
+            "display": "Congestive heart failure (disorder)",
+            "equivalence": "Wider"
+          }
+        ]
+      },
+      "source": "urn:oid:2.16.840.1.113883.6.29",
+      "sourceVersion": "unknown",
+      "target": "http://snomed.info/sct",
+      "targetVersion": "unknown"
+    }
+  ],
+  "resourceType": "ConceptMap",
+  "title": "mapping of 'Conditions|Congestive heart failure' from SWFT (Read) to CDSM (SNOMED CT)"
+}

@@ -1,0 +1,42 @@
+{
+  "group": [
+    {
+      "element": {
+        "code": "42343007",
+        "display": "Congestive heart failure (disorder)",
+        "target": [
+          {
+            "code": "G580",
+            "comment": "The definitions of the concepts are exactly the same (i.e. only grammatical differences) and structural implications of meaning are identical or irrelevant (i.e. intentionally identical).",
+            "display": "Congestive heart failure",
+            "equivalence": "Equivalent"
+          }
+        ]
+      },
+      "source": "http://snomed.info/sct",
+      "sourceVersion": "unknown",
+      "target": "urn:oid:2.16.840.1.113883.6.29",
+      "targetVersion": "unknown"
+    },
+    {
+      "element": {
+        "code": "42343007",
+        "display": "Congestive heart failure (disorder)",
+        "target": [
+          {
+            "code": "I500",
+            "comment": "The definitions of the concepts are exactly the same (i.e. only grammatical differences) and structural implications of meaning are identical or irrelevant (i.e. intentionally identical).",
+            "display": "ICD-10",
+            "equivalence": "Equivalent"
+          }
+        ]
+      },
+      "source": "http://snomed.info/sct",
+      "sourceVersion": "unknown",
+      "target": "http://hl7.org/fhir/sid/icd-10-uk",
+      "targetVersion": "unknown"
+    }
+  ],
+  "resourceType": "ConceptMap",
+  "title": "mapping of 'Conditions|Congestive heart failure' from CDSM (SNOMED CT) to SWFT (Read,ICD-10-UK)"
+}
