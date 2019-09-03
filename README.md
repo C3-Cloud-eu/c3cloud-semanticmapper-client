@@ -26,9 +26,7 @@ running it requires to mount the directory containing the required informations:
 docker run -v /absolute/path/to/data/folder:/app/data \\
 	mikaeldusenne/c3cloudsis_client \\
 	python -m c3cloud_semanticmapper_client \\
-	--apikey-path data/apikey \\
-	--config data/import.yaml \\
-	--url 'https://rubis.limics.upmc.fr/c3-cloud/' \\
+	--config ./data/import.yaml \\
 	--dry-run
 ```
 
@@ -79,9 +77,8 @@ to source your regular shell configuration.
 
 ```sh
 python -m c3cloud_semanticmapper_client \\
-	--apikey-path data/apikey \\
 	--config data/import.yaml \\
-	--url 'https://rubis.limics.upmc.fr/c3-cloud/' \\
+	[--url 'https://rubis.limics.upmc.fr/c3-cloud/'] \\
 	[--dry-run] [--force] [--delete]
 ```
 
@@ -89,11 +86,9 @@ parameters:
 
 > `--config` the path to the yaml configuration file.
 
-> `--apikey-path` the path to the file containing the API key.
+options:
 
 > `--url` url to the API
-
-options:
 
 > `--force` → force overriding data on the server if the mapping already exists and is different than the one provided in the excel file
 
@@ -101,41 +96,6 @@ options:
 
 > `--delete` → delete concepts and mapping not present in the excel sheet. Recommended to use if performing a whole-data update (i.e. the excel sheet contains the entirety of the data supposed to be on the server).
 
+## Documentation
 
-
-## Logs and behaviour
-
-The script will do some output for each mapping and for each site it tries to upload.
-
-When a mapping is identical to what is already on the server side, it will not try to upload it and the output will be:
-```
-already in db→ <apixaban>@<OSAKI>:[identical]
-```
-
-When a mapping already exist on the server and is different to the one provided in your xlsx file, it will print both versions to the console and will **not** override it if you did not use the `--force` option.
-
-Here is an example where the `designation` fields differ:
-
-```
-already in db→ <pneumococcal disease vaccination>@<CDSM>:[different]
-local:
-['code', '12866006']
-['code_system', 'SNOMED CT']
-['concept', 'pneumococcal disease vaccination']
-['designation', 'Pneumococcal vaccination (procedure)']
-['site', 'CDSM']
-
-
-server:
-['code', '12866006']
-['code_system', 'SNOMED CT']
-['code_system_uri', 'uri:oid:2.16.840.1.113883.6.96']
-['concept', 'pneumococcal disease vaccination']
-['designation', 'Pneumococcal vaccination']
-['site', 'CDSM']
-
-[use --force to overwrite]
-```
-
-Lastly, when the mapping does not exist on the server side it will be uploaded.
 

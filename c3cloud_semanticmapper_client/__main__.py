@@ -28,7 +28,7 @@ def parseargs():
     parser.add_argument('--dry-run', '-d', help='read-only mode, do not perform any change', action='store_true')
     parser.add_argument('--force', '-f', help='in case of conflicts, force overwrite with the local data (by default only adds new mappings)', action='store_true')
     parser.add_argument('--NUKE', help='reset of the database before running. erases everything and starts with the fresh file', action='store_true')
-    parser.add_argument('--url', '-u', help='url to which the requests should be sent. default localhost:5000')
+    parser.add_argument('--url', '-u', help='url to which the requests should be sent. default "https://rubis.limics.upmc.fr/c3-cloud/"', default="https://rubis.limics.upmc.fr/c3-cloud/")
     parser.add_argument('--config', '-c', help='path to the config file to use.', required = True)
     parser.add_argument('--verbose', '-v', help='verbose output', action='store_true')
     parser.add_argument('--apikey-path', '-k', help='path to the api key file', required = True)
@@ -37,26 +37,14 @@ def parseargs():
     return cliargs
 
 def main(cliargs):    
-    global codesystems
-    # global illegals
-    # global report
-    global baseurl
+    global codesystems, baseurl
 
     c3_cloud_excel_loader.illegals = set()
-    # report = Counter(
-    #     identical=0,
-    #     different=0,
-    #     new=0,
-    #     error=0
-    # )
 
     client.verbose = 'info' if cliargs.verbose else 'warning'
     client.interactive = cliargs.interactive
     client.dryrun = cliargs.dry_run
     client.FORCE = cliargs.force
-
-    if cliargs.url is None:
-        cliargs.url = 'http://localhost:5000/c3-cloud/'
       
     client.baseurl = cliargs.url
     
