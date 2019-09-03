@@ -98,4 +98,4 @@ options:
 
 ## Documentation
 
-
+refer to <https://rubis.limics.upmc.fr/c3-cloud/documentation/> for a more detailed description of the semantic mapper and this client.
