@@ -286,7 +286,7 @@ def load_config(configpath):
     global codesystems
     global mappings
     with open(configpath) as f:
-        y = yaml.load(f)
+        y = yaml.load(f, Loader=yaml.FullLoader)
     # fetch_data_form_server()
     return y
 

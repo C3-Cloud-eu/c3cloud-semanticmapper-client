@@ -72,7 +72,7 @@ def main(cliargs):
     
     print('done.')
     print('──────────────────────────────')
-    print('illegals:', c3_cloud_excel_loader.illegals)
+    print('Discarded designations:', c3_cloud_excel_loader.illegals)
     for category, count in client.report.items():
         print('{}: {}'.format(category, count))
 

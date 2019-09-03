@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/mikaeldusenne/c3cloud-semanticmapper-client.svg?branch=master)](https://travis-ci.org/mikaeldusenne/c3cloud-semanticmapper-client)
+
 # C3-cloud semantic mapper client updater
 
 This package parses xlsx files containing the data for the Semantic Mapper of C3-cloud,  
@@ -5,48 +7,10 @@ and allows to visualize new/modified/outdated concepts and to upload new data to
 
 ## Requirements
 
-Python 3.7
+Python 3.7 ([Instructions for Mac OSX](https://docs.python-guide.org/starting/install3/osx/))
+
 
 ## Installation
-
-### Github
-
-Clone the repository and `cd` to it:
-
-``` sh
-git clone https://github.com/mikaeldusenne/c3cloud-semanticmapper-client
-cd c3cloud-semanticmapper-client
-```
-
-Install the package:
-
-```sh
-python setup.py install
-```
-
-#### Virtual environment
-
-If you do not wish to make a system-wide installation, you can use a virtual environment:
-
-```
-python -m venv VENV
-```
-
-To activate the virtual environment, run (before installing or using the package) :
-
-```
-source VENV/bin/activate
-```
-
-You should then see a `(VENV)` at the beginning of your shell prompt.
-
-To disable the virtual environment once you are done using the package, run:
-
-```
-source ~/.bash_profile
-```
-
-to source your regular shell configuration.
 
 ### Docker
 
@@ -69,6 +33,46 @@ docker run -v /absolute/path/to/data/folder:/app/data \\
 ```
 
 where `/absolute/path/to/data/folder` contains the data to import (i.e. the `import.yaml` file and the excel sheet to load) and the `apikey` file containing the key to authorize requests in the API.
+
+### Github
+
+Clone the repository and `cd` to it:
+
+``` sh
+git clone https://github.com/mikaeldusenne/c3cloud-semanticmapper-client
+cd c3cloud-semanticmapper-client
+```
+
+Install the package:
+
+```sh
+python3 setup.py install
+```
+
+#### Virtual environment (optional)
+
+If you do not wish to make a system-wide installation, you can use a virtual environment:
+
+```
+python3 -m venv VENV
+```
+
+To activate the virtual environment, run (before installing or using the package) :
+
+```
+source VENV/bin/activate
+```
+
+You should then see a `(VENV)` at the beginning of your shell prompt.
+
+To disable the virtual environment once you are done using the package, run:
+
+```
+source ~/.bash_profile
+```
+
+to source your regular shell configuration.
+
 	
 ## Running the script
 
