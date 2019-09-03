@@ -1,6 +1,6 @@
 import json
-from c3_cloud_client import client
-from c3_cloud_client import objects
+from c3cloud_semanticmapper_client import client
+from c3cloud_semanticmapper_client import objects
 import pandas as pd
 import jsondiff
 
