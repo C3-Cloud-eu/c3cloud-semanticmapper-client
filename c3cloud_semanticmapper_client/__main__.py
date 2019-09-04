@@ -7,11 +7,16 @@ from c3cloud_semanticmapper_client import c3_cloud_excel_loader
 
 def run(configpath):
     dirname = os.path.dirname(configpath)
+
     def fullpath(e):
         return os.path.join(dirname, e)
-    fetch_data_form_server()
+
     config = load_config(configpath)
     print(config)
+
+    client.__init__(config['apikey_path'])
+    
+    fetch_data_form_server()
     if 'terminologies' in config.keys():
         upload_terminologies(fullpath(config['terminologies']))
     if 'verbosity' in config.keys():
@@ -67,5 +72,4 @@ def main(cliargs):
 
 if __name__ == "__main__":
     cliargs = parseargs()
-    client.__init__(apikey_path = cliargs.apikey_path)
     main(cliargs)

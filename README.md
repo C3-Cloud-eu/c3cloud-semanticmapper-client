@@ -76,7 +76,7 @@ to source your regular shell configuration.
 
 
 ```sh
-python -m c3cloud_semanticmapper_client \\
+python3 -m c3cloud_semanticmapper_client \\
 	--config data/import.yaml \\
 	[--url 'https://rubis.limics.upmc.fr/c3-cloud/'] \\
 	[--dry-run] [--force] [--delete]
