@@ -31,7 +31,7 @@ def parseargs():
     parser.add_argument('--url', '-u', help='url to which the requests should be sent. default "https://rubis.limics.upmc.fr/c3-cloud/"', default="https://rubis.limics.upmc.fr/c3-cloud/")
     parser.add_argument('--config', '-c', help='path to the config file to use.', required = True)
     parser.add_argument('--verbose', '-v', help='verbose output', action='store_true')
-    parser.add_argument('--apikey-path', '-k', help='path to the api key file', required = True)
+    ## parser.add_argument('--apikey-path', '-k', help='path to the api key file', required = True)
 
     cliargs = parser.parse_args()
     return cliargs
