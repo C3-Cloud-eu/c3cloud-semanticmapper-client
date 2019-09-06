@@ -25,7 +25,6 @@ running it requires to mount the directory containing the required informations:
 ```sh
 docker run -v /absolute/path/to/data/folder:/app/data \\
 	mikaeldusenne/c3cloudsis_client \\
-	python -m c3cloud_semanticmapper_client \\
 	--config ./data/import.yaml \\
 	--dry-run
 ```

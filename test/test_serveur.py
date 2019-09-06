@@ -1,12 +1,15 @@
 import json
 from c3cloud_semanticmapper_client import client
 from c3cloud_semanticmapper_client import objects
+from c3cloud_semanticmapper_client.c3_cloud_excel_loader import load_config
 import pandas as pd
 import jsondiff
 
-client.__init__()
+config = load_config("./fakeconfig/import.yaml")
+config['root_path'] = "./"
+client.__init__(config = config)
 # client.baseurl = 'https://rubis.limics.upmc.fr/c3-cloud/'
-client.baseurl = 'http://localhost:5000/c3-cloud/'
+client.baseurl = 'http://localhost/c3-cloud/'
 
 
 def sortjson(e):
@@ -96,7 +99,7 @@ def test_delete_concept():
 
 
 def test_get_terminology():
-    css = pd.read_csv('../data/data_2019_02_07/terminologies.csv')[['code_system','code_system_uri']]
+    css = pd.read_csv('../data/data_2019_09_05/terminologies.csv')[['code_system','code_system_uri']]
     def check(r):
         print(f'checking terminology {r}')
         cs = client.get_code_system(r['code_system'])

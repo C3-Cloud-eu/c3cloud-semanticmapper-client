@@ -13,18 +13,31 @@ from c3cloud_semanticmapper_client.lib import *
 from c3cloud_semanticmapper_client.helpers import schema_mapping
 
 
-def __init__(cliargs, config):
+        
+def __init__(cliargs=None, config=None):
     global report, FORCE, dryrun, interactive, APIKEY, baseurl, verbose
     
-    verbose = 'info' if cliargs.verbose else 'warning'
-    interactive = cliargs.interactive
-    dryrun = cliargs.dry_run
-    FORCE = cliargs.force
-    baseurl = cliargs.url
+    if cliargs is None:
+        baseurl='https://rubis.limics.upmc.fr/c3-cloud/'
+        verbose = "info"
+        dryrun=False
+        FORCE=True
+        interactive=False
+    else:
+        verbose = 'info' if cliargs.verbose else 'warning'
+        interactive = cliargs.interactive
+        dryrun = cliargs.dry_run
+        FORCE = cliargs.force
+        baseurl = cliargs.url
+        
+    if config is None:
+        print('dummy init')
+        APIKEY=''
+    else:    
+        apikeypath = join(config['root_path'], config['apikey_path'])
+        with open(apikeypath, 'r') as f:
+            APIKEY = f.read().strip()
 
-    apikeypath = join(config['root_path'], config['apikey_path'])
-    with open(apikeypath, 'r') as f:
-        APIKEY = f.read().strip()
     report = Counter(
         identical=0,
         different=0,
@@ -47,7 +60,7 @@ def sendrequest(url, method="get", get=None, data=None):
     data: json encoded data to send as the POST request body
     get: GET parameters
     '''
-    full_url = "{}{}/".format(baseurl, url)
+    full_url = os.path.join(baseurl, url) + "/"
     args = {k: v for k, v in {'params': get, 'json': data, 'headers':{'key': APIKEY}}.items() if v}
     # execute either requests.get or requests.post based on the <method> arg
     print(full_url)

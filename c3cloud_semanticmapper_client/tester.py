@@ -1,15 +1,16 @@
 import sys
-from loaderScript_pandas import run
 from lib import *
 import client
 import numpy as np
 import os
 import importlib
 import re
+import json
+from itertools import groupby
 
 client.__init__()
 ## client.baseurl = 'https://rubis.limics.upmc.fr/c3-cloud/'
-client.baseurl = 'http://localhost:5000/c3-cloud/'
+## client.baseurl = 'http://localhost:5000/c3-cloud/'
 
 ## client.delete_concept("C3DP_CDSM_PROFILE|RASA")
 
@@ -45,3 +46,50 @@ if __name__ == '__main__':
     
     sheetName = sheets[1]
     good_df_columns(df)
+
+
+
+
+#### counts
+def load(req):
+    return json.loads(client.sendrequest(req).content)['data']
+
+
+def describe_counts(o):
+    d = {'total': len(o),
+         'total_clinical': len([e for e in o if not e['concept'].startswith("C3DP_CDSM_PROFILE|")])}
+
+    ## per sheet
+    sheets = ["Conditions",
+              "Observations",
+              "Immunizations",
+              "Medications",
+              "Family History",
+              "Procedures",
+              "C3DP_CDSM_PROFILE"]
+    
+    recs = {which: len([e for e in o if e['concept'].startswith("{}|".format(which))]) for which in sheets }
+    # print( json.dumps([e for e in o if e['concept'].startswith("{}|".format("Immunizations"))], indent=4))
+
+    d.update(recs)
+    
+    print('\t'.join(map(str, d.values())))
+
+
+def onlyone_per(o, keyfunction):
+    o = sorted(o, key=keyfunction)
+    return [list(v)[0] for k, v in groupby(o, keyfunction)]
+    
+
+def onlyone_per_concept_and_site(o):
+    return onlyone_per(o, lambda e: (e['concept'], e['site']))
+
+mappings = load("mappings")
+describe_counts( onlyone_per_concept_and_site(mappings) )
+
+for site in ["CDSM", "RJH", "OSAKI", "SWFT"]:
+    describe_counts(onlyone_per_concept_and_site([ e for e in mappings if e['site'] == site ]))
+
+
+len(set([e['concept'] for e in mappings]))
+

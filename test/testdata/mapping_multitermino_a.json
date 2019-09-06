@@ -38,5 +38,5 @@
     }
   ],
   "resourceType": "ConceptMap",
-  "title": "mapping of 'Conditions|Congestive heart failure' from CDSM (SNOMED CT) to SWFT (Read,ICD-10-UK)"
+  "title": "mapping of 'Conditions|Congestive heart failure' from CDSM (SNOMED CT) to SWFT (ICD-10-UK,Read)"
 }

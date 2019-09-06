@@ -30,11 +30,6 @@ def main(cliargs):
     c3_cloud_excel_loader.illegals = set()
 
     
-    if cliargs.NUKE:
-        printwarn('!!!!!!!! !!! deleting everything !!! !!!!!!!!')
-        input()
-        ans = client.sendrequest('all', method='delete')
-        print(ans)
     
     def run():
         root_path = os.path.dirname(cliargs.config)
@@ -51,7 +46,12 @@ def main(cliargs):
         
         printinfo('Using "{}" as base url'.format(client.baseurl))
     
-        
+        if cliargs.NUKE:
+            printwarn('!!!!!!!! !!! deleting everything !!! !!!!!!!!')
+            input()
+            ans = client.sendrequest('all', method='delete')
+            print(ans)
+            
         fetch_data_form_server()
         if 'terminologies' in config.keys():
             upload_terminologies(fullpath(config['terminologies']))
