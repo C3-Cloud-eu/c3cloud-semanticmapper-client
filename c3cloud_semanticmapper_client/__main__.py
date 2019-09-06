@@ -1,3 +1,5 @@
+from os.path import join, dirname
+
 from c3cloud_semanticmapper_client import client
 import sys
 import argparse
@@ -5,26 +7,6 @@ from c3cloud_semanticmapper_client.lib import *
 from c3cloud_semanticmapper_client.c3_cloud_excel_loader import *
 from c3cloud_semanticmapper_client import c3_cloud_excel_loader
 
-def run(configpath):
-    dirname = os.path.dirname(configpath)
-
-    def fullpath(e):
-        return os.path.join(dirname, e)
-
-    config = load_config(configpath)
-    print(config)
-
-    client.__init__(config['apikey_path'])
-    
-    fetch_data_form_server()
-    if 'terminologies' in config.keys():
-        upload_terminologies(fullpath(config['terminologies']))
-    if 'verbosity' in config.keys():
-        client.verbosity = ['info','warning','error'].index(config['verbosity'])
-    l = [importFile(fullpath(k), e['sheets'])
-        for k, e in config['mappings'].items()]
-    #print(l)
-    #uploadItems(l)
 
 def parseargs():
     args = sys.argv
@@ -39,6 +21,7 @@ def parseargs():
     ## parser.add_argument('--apikey-path', '-k', help='path to the api key file', required = True)
 
     cliargs = parser.parse_args()
+    print(cliargs)
     return cliargs
 
 def main(cliargs):    
@@ -46,14 +29,6 @@ def main(cliargs):
 
     c3_cloud_excel_loader.illegals = set()
 
-    client.verbose = 'info' if cliargs.verbose else 'warning'
-    client.interactive = cliargs.interactive
-    client.dryrun = cliargs.dry_run
-    client.FORCE = cliargs.force
-      
-    client.baseurl = cliargs.url
-    
-    printinfo('Using "{}" as base url'.format(client.baseurl))
     
     if cliargs.NUKE:
         printwarn('!!!!!!!! !!! deleting everything !!! !!!!!!!!')
@@ -61,8 +36,34 @@ def main(cliargs):
         ans = client.sendrequest('all', method='delete')
         print(ans)
     
-    run(cliargs.config)
+    def run():
+        root_path = os.path.dirname(cliargs.config)
+        def fullpath(e):
+            return os.path.join(root_path, e)
     
+        config = load_config(cliargs.config)
+        config['root_path'] = root_path
+        print(config)
+    
+        
+        client.__init__(cliargs, config)
+        
+        
+        printinfo('Using "{}" as base url'.format(client.baseurl))
+    
+        
+        fetch_data_form_server()
+        if 'terminologies' in config.keys():
+            upload_terminologies(fullpath(config['terminologies']))
+        if 'verbosity' in config.keys():
+            client.verbosity = ['info','warning','error'].index(config['verbosity'])
+        l = [importFile(fullpath(k), e['sheets'])
+            for k, e in config['mappings'].items()]
+        #print(l)
+        #uploadItems(l)
+        
+    run()
+        
     print('done.')
     print('──────────────────────────────')
     print('Discarded designations:', c3_cloud_excel_loader.illegals)
@@ -71,5 +72,6 @@ def main(cliargs):
 
 
 if __name__ == "__main__":
+    print(sys.argv)
     cliargs = parseargs()
     main(cliargs)

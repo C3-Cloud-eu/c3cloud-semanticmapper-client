@@ -5,18 +5,25 @@ from collections import Counter
 import numpy as np
 import json
 import schema
+from os.path import join
+import os
 
 from c3cloud_semanticmapper_client.objects import *
 from c3cloud_semanticmapper_client.lib import *
 from c3cloud_semanticmapper_client.helpers import schema_mapping
 
 
-def __init__(apikey_path):
-    global report, FORCE, dryrun, interactive, APIKEY
-    FORCE = False
-    dryrun = False
-    interactive = False
-    with open(apikey_path, 'r') as f:
+def __init__(cliargs, config):
+    global report, FORCE, dryrun, interactive, APIKEY, baseurl, verbose
+    
+    verbose = 'info' if cliargs.verbose else 'warning'
+    interactive = cliargs.interactive
+    dryrun = cliargs.dry_run
+    FORCE = cliargs.force
+    baseurl = cliargs.url
+
+    apikeypath = join(config['root_path'], config['apikey_path'])
+    with open(apikeypath, 'r') as f:
         APIKEY = f.read().strip()
     report = Counter(
         identical=0,

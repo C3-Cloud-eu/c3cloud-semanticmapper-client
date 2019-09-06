@@ -8,5 +8,7 @@ COPY setup.py /app/
 RUN python setup.py install
 
 
+ENTRYPOINT ["python", "-m", "c3cloud_semanticmapper_client"]
+
 
 
